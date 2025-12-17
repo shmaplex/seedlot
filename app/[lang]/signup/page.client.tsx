@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { SignupForm } from "@/components/account/signup-form";
 
 interface SignupPageClientProps {
@@ -16,14 +17,16 @@ export default function SignupPageClient({
     <div className="flex min-h-screen bg-background">
       {/* Left panel */}
       <div className="relative hidden h-screen w-1/2 flex-col justify-between overflow-hidden bg-primary/5 p-10 lg:flex">
-        <div className="absolute top-6 left-6 w-48">
-          <Image
-            src="/png/seedlot-logo@2x.png"
-            alt="Seedlot logo"
-            width={250}
-            height={50}
-            priority
-          />
+        <div className="absolute top-6 left-6 w-48 opacity-80 hover:opacity-100 duration-500 ease-in-out">
+          <Link href="/">
+            <Image
+              src="/png/seedlot-logo@2x.png"
+              alt="Seedlot logo"
+              width={128}
+              height={50}
+              priority
+            />
+          </Link>
         </div>
 
         <div className="absolute bottom-10 left-10 max-w-sm text-foreground text-sm">

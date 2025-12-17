@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { UserRole } from "@/lib/generated/prisma/enums";
+import { prisma } from "@/lib/server/prisma";
 import { createClient } from "@/lib/supabase/server";
 
 export async function login(formData: FormData, lang: string) {
@@ -26,8 +28,11 @@ export async function signup(formData: FormData, lang: string) {
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const fullName = formData.get("name") as string;
+  const username = formData.get("username") as string; // make sure the form has this field
 
-  const { error } = await supabase.auth.signUp({
+  // 1️⃣ Sign up with Supabase
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -39,7 +44,25 @@ export async function signup(formData: FormData, lang: string) {
     redirect(`/${lang}/signup?error=signup_failed`);
   }
 
-  redirect(`/${lang}/`);
+  // 2️⃣ If Supabase signup succeeded, create the Profile in Prisma
+  try {
+    // 2️⃣ Create profile in Prisma
+    await prisma.profile.create({
+      data: {
+        id: data.user?.id!,
+        email,
+        fullName,
+        username,
+        role: UserRole.EXPORTER,
+      },
+    });
+  } catch (prismaError) {
+    console.error("Error creating profile in Prisma:", prismaError);
+    // Optional: you may want to rollback Supabase user here
+    redirect(`/${lang}/signup?error=profile_creation_failed`);
+  }
+
+  redirect(`/${lang}/dashboard`);
 }
 
 export async function resendConfirmation(email: string) {

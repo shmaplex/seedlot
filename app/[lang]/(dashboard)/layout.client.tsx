@@ -14,7 +14,7 @@ interface DashboardClientLayoutProps {
 
 export default function DashboardClientLayout({
   children,
-  role,
+  role = "exporter",
 }: DashboardClientLayoutProps) {
   const pathname = usePathname();
 

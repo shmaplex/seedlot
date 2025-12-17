@@ -21,9 +21,14 @@ import { Input } from "@/components/ui/input";
 interface SignupFormProps {
   lang: string;
   signupDict: any;
+  disableSocialLogin?: boolean; // new prop
 }
 
-export function SignupForm({ lang, signupDict }: SignupFormProps) {
+export function SignupForm({
+  lang,
+  signupDict,
+  disableSocialLogin = true,
+}: SignupFormProps) {
   return (
     <Card>
       <CardHeader>
@@ -98,9 +103,13 @@ export function SignupForm({ lang, signupDict }: SignupFormProps) {
                 <Button type="submit" className="w-full">
                   {signupDict.submit}
                 </Button>
-                <Button variant="outline" type="button" className="w-full">
-                  {signupDict.socialLogin || "Sign up with Google"}
-                </Button>
+
+                {!disableSocialLogin && (
+                  <Button variant="outline" type="button" className="w-full">
+                    {signupDict.socialLogin || "Sign up with Google"}
+                  </Button>
+                )}
+
                 <FieldDescription className="px-6 text-center">
                   {signupDict.haveAccount}{" "}
                   <Link

@@ -1,0 +1,59 @@
+{
+  "title": "Terms of Service",
+  "updatedLabel": "Last updated",
+  "lastUpdated": "December 17, 2025",
+  "content": [
+    {
+      "type": "paragraph",
+      "text": "By using Seedlot, you agree to these Terms of Service. Please read them carefully before using our platform."
+    },
+    {
+      "type": "heading",
+      "text": "Use of Services"
+    },
+    {
+      "type": "paragraph",
+      "text": "You may only use Seedlot for lawful purposes and in accordance with all applicable laws and regulations."
+    },
+    {
+      "type": "heading",
+      "text": "Account Responsibilities"
+    },
+    {
+      "type": "paragraph",
+      "text": "You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account."
+    },
+    {
+      "type": "heading",
+      "text": "Prohibited Conduct"
+    },
+    {
+      "type": "paragraph",
+      "text": "You may not engage in any activity that could harm the services, other users, or Seedlot’s reputation."
+    },
+    {
+      "type": "heading",
+      "text": "Termination"
+    },
+    {
+      "type": "paragraph",
+      "text": "Seedlot reserves the right to suspend or terminate accounts that violate these Terms."
+    },
+    {
+      "type": "heading",
+      "text": "Governing Law"
+    },
+    {
+      "type": "paragraph",
+      "text": "These Terms are governed by the laws of the jurisdiction in which Seedlot operates."
+    },
+    {
+      "type": "heading",
+      "text": "Contact Us"
+    },
+    {
+      "type": "paragraph",
+      "text": "If you have questions about these Terms, please contact us at support@seedlot.com."
+    }
+  ]
+}

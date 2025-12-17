@@ -1,13 +1,13 @@
 // app/[lang]/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getDictionary, hasLocale } from "@/lib/dictionaries";
+import { getDictionary, hasLocale } from "@/lib/server/dictionaries";
 import "@/styles/globals.css";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
+import { Footer } from "@/components/ui/custom";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { UserProvider } from "@/providers/UserProvider";
-import { Providers } from "../providers";
 
 // --- Fonts ---
 const geistSans = Geist({
@@ -47,7 +47,6 @@ export default async function RootLayout({
 
   // Preload translations (optional)
   const messages = await getDictionary(lang);
-  console.log("messages", messages);
 
   // Optional: validate supported locales
   const supportedLocales = ["en", "ko"] as const;
@@ -65,8 +64,8 @@ export default async function RootLayout({
       >
         <NextIntlClientProvider locale={lang} messages={messages}>
           <UserProvider initialUser={initialUser}>{children}</UserProvider>
-        </NextIntlClientProvider>{" "}
-        s
+          <Footer lang={lang} />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

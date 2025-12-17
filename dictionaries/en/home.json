@@ -1,8 +1,47 @@
 {
   "title": "Seed compliance, without the chaos",
   "description": "Import, validate, and manage seed lots with regulatory-grade clarity.",
+  "features": [
+    {
+      "title": "Traceability",
+      "description": "Track every seed lot from import to export with complete transparency."
+    },
+    {
+      "title": "Automated Validation",
+      "description": "Automatically validate seeds against regulatory standards."
+    },
+    {
+      "title": "Risk Management",
+      "description": "Classify and manage risks to ensure regulatory compliance."
+    },
+    {
+      "title": "Export-ready Documentation",
+      "description": "Generate all required documents instantly for international shipments."
+    }
+  ],
+  "howItWorks": [
+    {
+      "title": "Step 1: Import",
+      "description": "Bring your seed lot data into Seedlot safely and efficiently."
+    },
+    {
+      "title": "Step 2: Validate",
+      "description": "Automatically check compliance against regulatory standards."
+    },
+    {
+      "title": "Step 3: Manage",
+      "description": "Organize, classify, and track seed lots with advanced dashboards."
+    },
+    {
+      "title": "Step 4: Export",
+      "description": "Generate reports and export-ready documents for partners."
+    }
+  ],
   "actions": {
     "login": "Sign in",
-    "docs": "Documentation"
+    "docs": "Documentation",
+    "signup": "Sign up",
+    "cta": "Get Started Today",
+    "ctaTitle": "Start Growing Your Seed Compliance Today"
   }
 }

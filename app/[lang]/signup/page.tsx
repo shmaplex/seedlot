@@ -1,5 +1,5 @@
 import type { Locale } from "@/i18n-config";
-import { getDictionary } from "@/lib/dictionaries";
+import { getDictionary } from "@/lib/server/dictionaries";
 import SignupPageClient from "./page.client";
 
 /**

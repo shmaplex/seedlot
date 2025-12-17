@@ -1,0 +1,15 @@
+{
+  "navigation": "Navigation",
+  "account": "Account",
+  "language": "Language",
+  "description": "Seed compliance, without the chaos. Import, validate, and manage seed lots with regulatory-grade clarity. Automate traceability, risk classification, and export-ready documentation—so Korean suppliers and international partners can trust every shipment.",
+  "docs": "Docs",
+  "pricing": "Pricing",
+  "terms": "Terms",
+  "privacy": "Privacy",
+  "login": "Log In",
+  "signup": "Sign Up",
+  "github": "GitHub",
+  "csl": "CSL License",
+  "contribute": "Contribute / Donate via {platform}"
+}

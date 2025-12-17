@@ -1,7 +1,7 @@
 // i18n/request.ts
 import { getRequestConfig } from "next-intl/server";
-import { getDictionary } from "@/lib/dictionaries";
 import { isAppLocale } from "@/lib/isAppLocale";
+import { getDictionary } from "@/lib/server/dictionaries";
 import { type AppLocale, routing } from "./routing";
 
 /**

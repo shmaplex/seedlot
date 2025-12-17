@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { UserRole } from "@/lib/generated/prisma/enums";
 import DashboardClientLayout from "./layout.client";
 
 export default async function DashboardLayout({
@@ -18,7 +19,15 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <DashboardClientLayout>{children}</DashboardClientLayout>
+      <DashboardClientLayout
+      // role={
+      //   initialUser && initialUser?.profile
+      //     ? initialUser?.profile?.role
+      //     : UserRole.EXPORTER
+      // }
+      >
+        {children}
+      </DashboardClientLayout>
       <Toaster richColors toastOptions={{ style: { zIndex: 9999 } }} />
     </>
   );
