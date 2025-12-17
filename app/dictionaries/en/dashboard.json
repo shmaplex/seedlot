@@ -1,0 +1,30 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Overview of your seed data and recent activity",
+  "stats": {
+    "totalLots": "Total Seed Lots",
+    "totalLotsDesc": "All registered seed lots",
+    "imported": "Imports (30 days)",
+    "importedDesc": "Seed data imported recently",
+    "issues": "Validation Issues",
+    "issuesDesc": "Records requiring attention",
+    "lastImport": "Last Import",
+    "lastImportDesc": "Most recent data upload"
+  },
+  "activity": {
+    "title": "Recent Activity",
+    "description": "Latest actions in your account",
+    "items": {
+      "import": "Imported seed data from CSV",
+      "validation": "Resolved validation warnings",
+      "export": "Exported seed data"
+    }
+  },
+  "actions": {
+    "title": "Quick Actions",
+    "description": "Common tasks",
+    "import": "Import Seed Data",
+    "viewLots": "View Seed Lots",
+    "export": "Export Data"
+  }
+}

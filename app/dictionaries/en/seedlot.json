@@ -1,0 +1,17 @@
+{
+  "title": "Seed Lot",
+  "fields": {
+    "identifier": "Seed Lot ID",
+    "species": "Species",
+    "cultivar": "Cultivar",
+    "originCountry": "Country of Origin",
+    "importDate": "Import Date",
+    "storageCondition": "Storage Condition",
+    "viability": "Estimated Viability"
+  },
+  "status": {
+    "active": "Active",
+    "archived": "Archived",
+    "quarantined": "Quarantined"
+  }
+}

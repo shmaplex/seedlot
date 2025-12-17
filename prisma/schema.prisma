@@ -1,0 +1,277 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// ----------------------
+/// ENUMS
+/// ----------------------
+enum RegulatoryPath {
+  PPQ_587_SMALL_LOT
+  PHYTOSANITARY_REQUIRED
+  BULK_IMPORT_DOMESTIC_FULFILLMENT
+  EXPORT_PROHIBITED
+}
+
+enum RiskClass {
+  LOW
+  MEDIUM
+  HIGH
+  UNKNOWN
+}
+
+enum SeedUse {
+  HOBBY
+  RESEARCH
+  COMMERCIAL
+}
+
+enum PedigreeStatus {
+  NON_PEDIGREED
+  CERTIFIED
+  UNKNOWN
+}
+
+enum InspectionStatus {
+  PENDING
+  PASSED
+  FAILED
+  CONDITIONAL
+}
+
+/// ----------------------
+/// MODELS
+/// ----------------------
+
+model Organization {
+  id                     String   @id @default(uuid())
+  name                   String
+  country                String
+  registrationNumber     String?  @unique
+  nppoExporterAuthorized Boolean  @default(false)
+  nppoExporterId         String?
+  importerOfRecord       Boolean  @default(false)
+  complianceEmail        String?  @unique
+  notes                  String?
+  complianceFlags        Json?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now())
+
+  suppliers            Supplier[]
+  seedLots             SeedLot[]
+  exportedCertificates PhytosanitaryCertificate[]
+  shipmentsAsExporter  Shipment[]
+}
+
+model Supplier {
+  id                     String   @id @default(uuid())
+  orgId                  String
+  legalName              String
+  country                String
+  productionLocation     String
+  supplierRegistrationId String?
+  nppoRegistered         Boolean?
+  contactEmail           String   @unique
+  productionPractices    Json?
+  exportHistoryCountries Json?
+  notes                  String?
+  riskIndicators         Json?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now())
+
+  org      Organization @relation(fields: [orgId], references: [id])
+  seedLots SeedLot[]
+}
+
+model SeedBiology {
+  id                  String     @id @default(uuid())
+  scientificName      String
+  commonName          String?
+  family              String?
+  genus               String?
+  seedBorneRiskKnown  Boolean?
+  knownPathogens      String[]
+  commonlyRegulated   Boolean?
+  biologicalRiskClass RiskClass?
+  breedingType        String?
+  biologyNotes        String?
+}
+
+model SeedLot {
+  id                  String          @id @default(uuid())
+  orgId               String
+  supplierId          String
+  lotCode             String
+  biology             Json
+  originCountry       String
+  seedUse             SeedUse
+  pedigreeStatus      PedigreeStatus
+  quantityAvailable   Int?
+  harvestYear         Int?
+  storageConditions   String?
+  internalNotes       String?
+  regulatoryPath      RegulatoryPath?
+  riskClass           RiskClass?
+  knownQuarantineRisk Boolean?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @default(now())
+
+  org                   Organization           @relation(fields: [orgId], references: [id])
+  supplier              Supplier               @relation(fields: [supplierId], references: [id])
+  regulatoryAssessments RegulatoryAssessment[]
+  ppqCompliance         PPQ587Compliance?
+}
+
+model RegulatoryAssessment {
+  id                 String         @id @default(uuid())
+  seedLotId          String
+  destinationCountry String
+  regulatoryPath     RegulatoryPath
+  riskClass          RiskClass
+  justification      String
+  ruleSource         String
+  confidence         Float          @default(0.5)
+  humanReviewed      Boolean        @default(false)
+  overrideReason     String?
+  rulesetVersion     String?
+  assessedBy         String         @default("system")
+  assessedAt         DateTime       @default(now())
+  validUntil         DateTime       @default(now())
+
+  seedLot       SeedLot         @relation(fields: [seedLotId], references: [id])
+  decisionBases DecisionBasis[]
+}
+
+model DecisionBasis {
+  id                     String   @id @default(uuid())
+  regulatoryAssessmentId String
+  evidenceId             String
+  justificationAspect    String
+  decisive               Boolean  @default(false)
+  explanation            String?
+  createdAt              DateTime @default(now())
+
+  regulatoryAssessment RegulatoryAssessment @relation(fields: [regulatoryAssessmentId], references: [id])
+  evidence             Evidence             @relation(fields: [evidenceId], references: [id])
+}
+
+model Evidence {
+  id                     String   @id @default(uuid())
+  type                   String
+  title                  String
+  summary                String?
+  sourceReference        String?
+  contentHash            String?
+  confidence             Float?
+  authoritative          Boolean  @default(false)
+  active                 Boolean  @default(true)
+  supersededByEvidenceId String?
+  createdBy              String   @default("system")
+  createdAt              DateTime @default(now())
+
+  decisionBases DecisionBasis[]
+  evidenceLinks EvidenceLink[]
+}
+
+model EvidenceLink {
+  id         String   @id @default(uuid())
+  evidenceId String
+  entityType String
+  entityId   String
+  role       String
+  weight     Float    @default(1)
+  linkedBy   String   @default("SYSTEM")
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id])
+}
+
+model PhytosanitaryCertificate {
+  id                     String           @id @default(uuid())
+  issuingCountry         String
+  issuingAuthority       String
+  certificateNumber      String           @unique
+  exporterOrgId          String
+  destinationCountry     String
+  importPermitReference  String?
+  seedLotIds             String[]
+  inspectionDate         DateTime
+  inspectionStatus       InspectionStatus
+  inspectorId            String?
+  inspectorNotes         String?
+  additionalDeclarations String[]
+  treatmentsApplied      Json?
+  issueDate              DateTime
+  validUntil             DateTime?
+  consignmentId          String?
+  reusedForReferenceOnly Boolean          @default(false)
+  statusFlags            Json?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @default(now())
+
+  exporterOrg Organization @relation(fields: [exporterOrgId], references: [id])
+  shipments   Shipment[]
+}
+
+model PPQ587Compliance {
+  seedLotId            String    @id
+  eligible             Boolean
+  exclusionReason      String?
+  permitNumber         String?
+  seedUse              SeedUse   @default(HOBBY)
+  nonPedigreedDeclared Boolean
+  packetSeedCount      Int?
+  maxAllowedSeedCount  Int?
+  quantityWithinLimit  Boolean?
+  riskClass            RiskClass @default(UNKNOWN)
+  labelVerified        Boolean   @default(false)
+  evaluatedAt          DateTime?
+  evaluatedBy          String?
+  auditNotes           String?
+
+  seedLot SeedLot @relation(fields: [seedLotId], references: [id])
+}
+
+model Shipment {
+  id                         String         @id @default(uuid())
+  seedLotIds                 String[]
+  exporterOrgId              String
+  importerId                 String
+  destinationCountry         String
+  regulatoryPath             RegulatoryPath
+  carrier                    String?
+  carrierService             String?
+  trackingNumber             String?
+  exportCountry              String
+  importPermitReference      String?
+  phytosanitaryCertificateId String?
+  declaredValueUSD           Float?
+  packageCount               Int?
+  declaredWeightKg           Float?
+  customsDescription         String?
+  labelsVerified             Boolean?
+  preExportInspection        Boolean?
+  shipmentStatus             String?
+  holdReason                 String?
+  shipmentNotes              String?
+  shippedAt                  DateTime?
+  clearedAt                  DateTime?
+  deliveredAt                DateTime?
+  auditTrail                 Json?
+  createdAt                  DateTime       @default(now())
+  updatedAt                  DateTime       @default(now())
+
+  exporterOrg              Organization              @relation(fields: [exporterOrgId], references: [id])
+  phytosanitaryCertificate PhytosanitaryCertificate? @relation(fields: [phytosanitaryCertificateId], references: [id])
+}

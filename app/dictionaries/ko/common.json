@@ -1,0 +1,10 @@
+{
+  "appName": "시드롯",
+  "save": "저장",
+  "cancel": "취소",
+  "edit": "수정",
+  "view": "보기",
+  "delete": "삭제",
+  "required": "필수",
+  "optional": "선택"
+}

@@ -1,0 +1,13 @@
+{
+  "title": "종자 데이터 가져오기",
+  "intro": "업로드한 데이터는 즉시 저장되지 않으며, 검토 후 승인해야 반영됩니다.",
+  "upload": "엑셀 파일 업로드",
+  "templateDownload": "템플릿 다운로드",
+  "preview": "미리보기",
+  "confirm": "가져오기 확인",
+  "rowStatus": {
+    "valid": "가져오기 가능",
+    "warning": "검토 필요",
+    "error": "가져오기 불가"
+  }
+}

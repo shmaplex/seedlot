@@ -1,0 +1,30 @@
+{
+  "title": "대시보드",
+  "subtitle": "종자 데이터 및 최근 활동 요약",
+  "stats": {
+    "totalLots": "전체 종자 로트",
+    "totalLotsDesc": "등록된 모든 종자 로트",
+    "imported": "최근 30일 가져오기",
+    "importedDesc": "최근 업로드된 종자 데이터",
+    "issues": "검증 문제",
+    "issuesDesc": "확인이 필요한 데이터",
+    "lastImport": "최근 가져오기",
+    "lastImportDesc": "가장 최근 데이터 업로드"
+  },
+  "activity": {
+    "title": "최근 활동",
+    "description": "계정에서의 최신 작업",
+    "items": {
+      "import": "CSV 파일로 종자 데이터 가져오기",
+      "validation": "데이터 검증 문제 해결",
+      "export": "종자 데이터 내보내기"
+    }
+  },
+  "actions": {
+    "title": "빠른 작업",
+    "description": "자주 사용하는 기능",
+    "import": "종자 데이터 가져오기",
+    "viewLots": "종자 로트 보기",
+    "export": "데이터 내보내기"
+  }
+}
