@@ -1,19 +1,20 @@
+// app/auth/confirm/route.ts
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Creating a handler to a GET request to route /auth/confirm
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const token_hash = searchParams.get("token_hash");
-  const type = searchParams.get("type") as EmailOtpType | null;
-  const next = "/account";
+  const url = new URL(request.url);
+  const token_hash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type") as EmailOtpType | null;
 
-  // Create redirect link without the secret token
-  const redirectTo = request.nextUrl.clone();
-  redirectTo.pathname = next;
-  redirectTo.searchParams.delete("token_hash");
-  redirectTo.searchParams.delete("type");
+  // Infer locale from referer (fallback to 'en')
+  const referer = request.headers.get("referer") ?? "";
+  const localeMatch = referer.match(/\/(en|ko)\b/);
+  const lang = localeMatch?.[1] ?? "en";
+
+  const successRedirect = `/${lang}/account`;
+  const loginRedirect = new URL(`/${lang}/login`, request.url);
 
   if (token_hash && type) {
     const supabase = await createClient();
@@ -22,13 +23,17 @@ export async function GET(request: NextRequest) {
       type,
       token_hash,
     });
+
     if (!error) {
-      redirectTo.searchParams.delete("next");
-      return NextResponse.redirect(redirectTo);
+      return NextResponse.redirect(successRedirect);
     }
+
+    // Pass a semantic error code
+    loginRedirect.searchParams.set("error", error.code ?? "otp_invalid");
+    return NextResponse.redirect(loginRedirect);
   }
 
-  // return the user to an error page with some instructions
-  redirectTo.pathname = "/error";
-  return NextResponse.redirect(redirectTo);
+  // Missing token/type → invalid link
+  loginRedirect.searchParams.set("error", "otp_invalid");
+  return NextResponse.redirect(loginRedirect);
 }

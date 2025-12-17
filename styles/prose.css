@@ -1,0 +1,133 @@
+/* Tailwind Typography: Light + Dark Mode Adjustments */
+.prose {
+  color: var(--foreground);
+  line-height: 1.75;
+}
+
+.prose a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.prose a:hover {
+  color: var(--primary-foreground);
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: var(--primary);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.prose p {
+  color: var(--foreground);
+  margin-bottom: 1em;
+}
+
+/* Bold and italic text */
+.prose strong, .prose b {
+  color: var(--foreground);
+  font-weight: 700;
+}
+.prose em, .prose i {
+  color: var(--foreground);
+  font-style: italic;
+}
+
+/* Code blocks and inline code */
+.prose code {
+  /* color: var(--accent);
+  background-color: var(--muted); */
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  overflow-x: auto;
+}
+
+.prose pre {
+  border-radius: 20;
+  background-color: rgb(248, 248, 255);
+  /* color: var(--foreground); */
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  word-break: normal;
+}
+
+/* Blockquotes */
+.prose blockquote {
+  border-left: 4px solid var(--accent);
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-style: italic;
+  margin: 1rem 0;  /* Add vertical space between blockquotes */
+  border-radius: 0.15rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);  /* Light shadow for better contrast */
+}
+
+
+/* Dark Mode Overrides */
+.dark .prose {
+  color: var(--foreground);
+}
+
+.dark .prose a {
+  color: var(--primary-foreground);
+}
+.dark .prose a:hover {
+  color: var(--primary);
+}
+
+.dark .prose strong, .dark .prose b {
+  color: var(--primary-foreground);
+}
+
+.dark .prose em, .dark .prose i {
+  color: var(--foreground);
+}
+
+.dark .prose h1, .dark .prose h2, .dark .prose h3, 
+.dark .prose h4, .dark .prose h5, .dark .prose h6 {
+  color: var(--foreground);
+}
+
+.dark .prose p {
+  color: var(--foreground);
+}
+
+.dark .prose code {
+  /* color: var(--accent-foreground); */
+  /* background-color: var(--muted-foreground); */
+}
+
+.dark .prose pre {
+  border-radius: 20;
+  background-color: rgb(29, 31, 33);
+  /* background-color: var(--muted-foreground); */
+  /* color: var(--foreground); */
+}
+
+/* Dark Mode Blockquotes */
+.dark .prose blockquote {
+   border-left-color: var(--accent);  /* Slightly lighter accent color for better contrast */
+   background-color: var(--muted-background);   /* Darker background color */
+   color: var(--foreground);  /* Use the lighter foreground color for readability */
+}
+
+/* Tables */
+.prose table th, .prose table td {
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark .prose table th, .dark .prose table td {
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark .prose hr, .prose hr {
+  border-color: var(--border);
+}
+

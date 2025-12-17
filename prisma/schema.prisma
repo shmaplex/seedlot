@@ -49,9 +49,61 @@ enum InspectionStatus {
   CONDITIONAL
 }
 
+enum SeedLotSubmissionStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
+
+enum RegulatoryAssessmentStatus {
+  PENDING
+  COMPLETED
+}
+
+enum UserRole {
+  EXPORTER
+  SUPPLIER
+  INSPECTOR
+  INTERNAL
+  IMPORTER
+}
+
 /// ----------------------
 /// MODELS
 /// ----------------------
+
+/// ----------------------
+/// PROFILE / USER MODEL
+/// ----------------------
+
+model Profile {
+  /// Primary key — matches Supabase auth.users.id
+  id        String   @id @db.Uuid
+  email     String   @unique
+  fullName  String?
+  username  String?  @unique
+  avatarUrl String?
+
+  /// Role & permissions
+  role        UserRole @default(EXPORTER)
+  permissions Json?    /// Optional granular permission overrides
+
+  /// Preferences
+  preferredLang String? @default("en")
+  timezone      String? 
+  settings      Json?  /// Any custom user settings for dashboard
+
+  /// Relations
+  organizationId String? 
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  /// Reverse relations
+  managedOrgs Organization[] @relation("ProfileManagedOrganizations") // optional: if a profile can manage multiple orgs
+
+  /// Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 model Organization {
   id                     String   @id @default(uuid())
@@ -71,6 +123,10 @@ model Organization {
   seedLots             SeedLot[]
   exportedCertificates PhytosanitaryCertificate[]
   shipmentsAsExporter  Shipment[]
+
+  /// Link back to the profile
+  ownerProfileId String? 
+  ownerProfile   Profile? @relation("ProfileManagedOrganizations", fields: [ownerProfileId], references: [id])
 }
 
 model Supplier {
@@ -93,6 +149,35 @@ model Supplier {
   seedLots SeedLot[]
 }
 
+model SeedLot {
+  id                  String          @id @default(uuid())
+  orgId               String
+  supplierId          String
+  lotCode             String
+  seedBiologyId       String?
+  seedBiology         SeedBiology? @relation(fields: [seedBiologyId], references: [id])
+  originCountry       String
+  seedUse             SeedUse
+  pedigreeStatus      PedigreeStatus
+  quantityAvailable   Int?
+  harvestYear         Int?
+  storageConditions   String?
+  internalNotes       String?
+  regulatoryPath      RegulatoryPath?
+  riskClass           RiskClass?
+  knownQuarantineRisk Boolean?
+  submissionStatus    SeedLotSubmissionStatus @default(PENDING)
+  latestAssessmentId  String? @unique
+  latestAssessment    RegulatoryAssessment? @relation("LatestAssessment", fields: [latestAssessmentId], references: [id])
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @default(now())
+
+  org                   Organization           @relation(fields: [orgId], references: [id])
+  supplier              Supplier               @relation(fields: [supplierId], references: [id])
+  regulatoryAssessments RegulatoryAssessment[] @relation("AllAssessments")
+  ppqCompliance         PPQ587Compliance?
+}
+
 model SeedBiology {
   id                  String     @id @default(uuid())
   scientificName      String
@@ -105,31 +190,8 @@ model SeedBiology {
   biologicalRiskClass RiskClass?
   breedingType        String?
   biologyNotes        String?
-}
 
-model SeedLot {
-  id                  String          @id @default(uuid())
-  orgId               String
-  supplierId          String
-  lotCode             String
-  biology             Json
-  originCountry       String
-  seedUse             SeedUse
-  pedigreeStatus      PedigreeStatus
-  quantityAvailable   Int?
-  harvestYear         Int?
-  storageConditions   String?
-  internalNotes       String?
-  regulatoryPath      RegulatoryPath?
-  riskClass           RiskClass?
-  knownQuarantineRisk Boolean?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @default(now())
-
-  org                   Organization           @relation(fields: [orgId], references: [id])
-  supplier              Supplier               @relation(fields: [supplierId], references: [id])
-  regulatoryAssessments RegulatoryAssessment[]
-  ppqCompliance         PPQ587Compliance?
+  seedLots SeedLot[]
 }
 
 model RegulatoryAssessment {
@@ -147,9 +209,12 @@ model RegulatoryAssessment {
   assessedBy         String         @default("system")
   assessedAt         DateTime       @default(now())
   validUntil         DateTime       @default(now())
+  status             RegulatoryAssessmentStatus @default(PENDING)
 
-  seedLot       SeedLot         @relation(fields: [seedLotId], references: [id])
+  seedLot       SeedLot         @relation("AllAssessments", fields: [seedLotId], references: [id])
   decisionBases DecisionBasis[]
+
+  latestOfSeedLot SeedLot? @relation("LatestAssessment")
 }
 
 model DecisionBasis {

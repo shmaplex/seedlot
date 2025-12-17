@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export async function login(formData: FormData) {
+export async function login(formData: FormData, lang: string) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -15,13 +15,13 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect("/login?error=invalid_credentials");
+    redirect(`/${lang}/login?error=invalid_credentials`);
   }
 
-  redirect("/");
+  redirect(`/${lang}/dashboard`);
 }
 
-export async function signup(formData: FormData) {
+export async function signup(formData: FormData, lang: string) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -30,11 +30,53 @@ export async function signup(formData: FormData) {
   const { error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
+    },
   });
 
   if (error) {
-    redirect("/signup?error=signup_failed");
+    redirect(`/${lang}/signup?error=signup_failed`);
   }
 
-  redirect("/");
+  redirect(`/${lang}/`);
+}
+
+export async function resendConfirmation(email: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+  });
+
+  if (error) {
+    return { success: false, error: error.code ?? "resend_failed" };
+  }
+
+  return { success: true };
+}
+
+export async function sendPasswordReset(email: string, lang: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset`,
+  });
+
+  if (error) {
+    return { success: false, error: error.code ?? "reset_failed" };
+  }
+
+  return { success: true };
+}
+
+export async function updatePassword(newPassword: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword, // sets the new password
+  });
+
+  return { success: !error, error: error?.code };
 }

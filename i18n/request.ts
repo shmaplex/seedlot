@@ -1,4 +1,6 @@
+// i18n/request.ts
 import { getRequestConfig } from "next-intl/server";
+import { getDictionary } from "@/lib/dictionaries";
 import { isAppLocale } from "@/lib/isAppLocale";
 import { type AppLocale, routing } from "./routing";
 
@@ -15,13 +17,12 @@ import { type AppLocale, routing } from "./routing";
  */
 export default getRequestConfig(async ({ locale }) => {
   const candidate = locale ?? routing.defaultLocale;
-
   const resolvedLocale: AppLocale = isAppLocale(candidate)
     ? candidate
     : routing.defaultLocale;
 
   return {
     locale: resolvedLocale,
-    messages: (await import(`../messages/${resolvedLocale}`)).default,
+    messages: await getDictionary(resolvedLocale),
   };
 });

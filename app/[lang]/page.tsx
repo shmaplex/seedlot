@@ -1,8 +1,9 @@
+// app/[lang]/page.tsx
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getDictionary, hasLocale } from "./dictionaries";
+import type { Locale } from "@/i18n-config";
+import { getDictionary } from "@/lib/dictionaries";
 
 /**
  * Localized home / landing page
@@ -10,11 +11,7 @@ import { getDictionary, hasLocale } from "./dictionaries";
 export default async function HomePage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
 
-  if (!hasLocale(lang)) {
-    notFound();
-  }
-
-  const dict = await getDictionary(lang);
+  const dict = await getDictionary(lang as Locale);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">

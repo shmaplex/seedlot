@@ -1,0 +1,25 @@
+/* apps/web/styles/animations.css */
+
+/* Full loader rotates gently around the center */
+@keyframes loader-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-loader-spin {
+  animation: loader-spin 15s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+/* Individual cube movement animation */
+@keyframes cube-slide {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  25%       { transform: translate(var(--dx1), var(--dy1)) scale(0.9); }
+  50%       { transform: translate(var(--dx2), var(--dy2)) scale(1.1); }
+  75%       { transform: translate(var(--dx3), var(--dy3)) scale(0.95); }
+}
+
+/* Apply cube pulse + movement with staggered delays */
+.animate-cube {
+  animation: cube-slide var(--pulse-speed, 2.5s) ease-in-out infinite;
+  transform-origin: center center;
+}
