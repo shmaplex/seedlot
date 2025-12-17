@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export function HeaderLogo({ href = "/" }: { href?: string }) {
   return (
-    <div className="flex w-28">
+    <div className="flex w-28 mt-2 ml-2">
       <Link href={href} className="flex items-center">
         <Image
           src="/png/seedlot-logo@2x.png" // updated to Seedlot logo

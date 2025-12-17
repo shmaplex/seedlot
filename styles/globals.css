@@ -60,36 +60,33 @@
 /*       Dark Mode         */
 /* ----------------------- */
 .dark {
-  --background: #323639;       /* main bg */
-  --foreground: #FEFAE9;       /* cream text */
-  --card: #3A3E3B;             /* subtle card contrast */
-  --card-foreground: #FEFAE9;
+  --background: #323639;       /* main background */
+  --foreground: #FEFAE9;       /* text */
+  --card: #3B3F3C;             /* slightly lighter than bg */
+  --card-foreground: #FEFAE9;  
   --popover: #323639;
   --popover-foreground: #FEFAE9;
 
-  --primary: #FEFAE9;          /* cream for text/buttons */
-  --primary-foreground: #323639;
-
+  --primary: #A7B37D;          /* olive primary button */
+  --primary-foreground: #323639; /* text on primary button */
   --secondary: #BDC39A;
   --secondary-foreground: #323639;
-
   --accent: #BDC39A;
   --accent-foreground: #323639;
-
-  --muted: #464B47;
+  --muted: #3C403D;            
   --muted-foreground: #E6E4D8;
 
-  --destructive: #E63946;
-
-  --input: #464B47;          
-  --border: #5B5F55;
+  --destructive: #E63946;      
+  --input: #3C403D;          
+  --border: #4F534F;
   --ring: #BDC39A;
 
-  --sidebar: #2D302F;          /* sidebar darker than bg */
+  /* Sidebar */
+  --sidebar: #2F3230;          
   --sidebar-foreground: #FEFAE9;
   --sidebar-primary: #BDC39A;
   --sidebar-primary-foreground: #323639;
-  --sidebar-accent: #BDC39A;
+  --sidebar-accent: #A7B37D;
   --sidebar-accent-foreground: #FEFAE9;
   --sidebar-border: #464B47;
   --sidebar-ring: #BDC39A;
@@ -100,6 +97,7 @@
   --chart-3: #A7B37D;
   --chart-4: #464B47;
 }
+
 
 /* ----------------------- */
 /* Tailwind mapping        */

@@ -1,9 +1,13 @@
-// components/account/account-form.tsx
 "use client";
 
 import type { User } from "@supabase/supabase-js";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import {
+  getProfile,
+  updatePassword,
+  updateProfile as updateProfileAction,
+} from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "@/schemas/profile.schema";
 import Avatar from "./avatar";
 
@@ -26,7 +29,6 @@ export default function AccountForm({
   profile: UserProfile | null;
 }) {
   const t = useTranslations("account");
-  const supabase = createClient();
 
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState<string | null>(
@@ -38,103 +40,166 @@ export default function AccountForm({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     profile?.avatarUrl ?? null,
   );
+  const [newPassword, setNewPassword] = useState("");
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;
-
-    const { data } = await supabase
-      .from("Profile")
-      .select("fullName, username, avatarUrl")
-      .eq("id", user.id)
-      .single();
-
+    const data = await getProfile(user.id);
     if (data) {
       setFullName(data.fullName);
       setUsername(data.username);
       setAvatarUrl(data.avatarUrl);
     }
-  }, [user, supabase]);
+  }, [user]);
 
   useEffect(() => {
-    if (!profile) {
-      refreshProfile();
-    }
+    if (!profile) refreshProfile();
   }, [profile, refreshProfile]);
 
-  async function updateProfile() {
+  async function handleUpdateProfile() {
     if (!user) return;
-
     setLoading(true);
-
-    const { error } = await supabase.from("Profile").update({
+    const result = await updateProfileAction({
+      id: user.id,
       fullName,
       username,
       avatarUrl,
-      updatedAt: new Date().toISOString(),
     });
-
     setLoading(false);
 
-    if (error) {
+    if (!result) {
       alert(t("updateError"));
     } else {
       alert(t("updateSuccess"));
     }
   }
 
+  async function handleChangePassword() {
+    if (!newPassword) return;
+    setLoading(true);
+    const result = await updatePassword(newPassword);
+    setLoading(false);
+
+    if (result.success) {
+      alert(t("passwordUpdateSuccess"));
+      setNewPassword("");
+    } else {
+      alert(`${t("passwordUpdateError")}: ${result.error}`);
+    }
+  }
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
-      </CardHeader>
+    <div className="space-y-6">
+      {/* Main Profile Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl text-foreground">
+            {t("title")}
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            {t("description")}
+          </CardDescription>
+        </CardHeader>
 
-      <CardContent className="space-y-6">
-        <Avatar
-          uid={user?.id ?? null}
-          url={avatarUrl}
-          size={150}
-          onUpload={(url) => {
-            setAvatarUrl(url);
-            updateProfile();
-          }}
-        />
+        <CardContent className="space-y-6">
+          <div className="flex justify-center">
+            <Avatar
+              uid={user?.id ?? null}
+              url={avatarUrl}
+              size={150}
+              onUpload={(url) => {
+                setAvatarUrl(url);
+                handleUpdateProfile();
+              }}
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label>{t("email")}</Label>
-          <Input value={user?.email ?? ""} disabled />
-        </div>
+          <div className="space-y-2">
+            <Label className="text-foreground">{t("email")}</Label>
+            <Input
+              value={user?.email ?? ""}
+              disabled
+              className="bg-input border border-border text-foreground"
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="fullName">{t("fullName")}</Label>
-          <Input
-            id="fullName"
-            value={fullName ?? ""}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="fullName" className="text-foreground">
+              {t("fullName")}
+            </Label>
+            <Input
+              id="fullName"
+              value={fullName ?? ""}
+              onChange={(e) => setFullName(e.target.value)}
+              className="bg-input border border-border text-foreground"
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="username">{t("username")}</Label>
-          <Input
-            id="username"
-            value={username ?? ""}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="username" className="text-foreground">
+              {t("username")}
+            </Label>
+            <Input
+              id="username"
+              value={username ?? ""}
+              onChange={(e) => setUsername(e.target.value)}
+              className="bg-input border border-border text-foreground"
+            />
+          </div>
 
-        <div className="flex gap-3">
-          <Button onClick={updateProfile} disabled={loading}>
-            {loading ? t("saving") : t("update")}
-          </Button>
-
-          <form action="/auth/signout" method="post">
-            <Button variant="outline" type="submit">
-              {t("signOut")}
+          <div className="flex gap-3 justify-end">
+            <Button onClick={handleUpdateProfile} disabled={loading}>
+              {loading ? t("saving") : t("update")}
             </Button>
+            {/* <form action="/auth/signout" method="post">
+              <Button variant="destructive" type="submit">
+                {t("signOut")}
+              </Button>
+            </form> */}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Password Change Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl text-foreground">
+            {t("changePassword")}
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            {t("newPasswordPlaceholder")}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await handleChangePassword();
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-foreground">
+                {t("newPassword")}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={t("newPasswordPlaceholder")}
+                className="bg-input border border-border text-foreground"
+              />
+            </div>
+            <div className="w-full justify-end flex">
+              <Button type="submit" disabled={loading || !newPassword}>
+                {loading ? t("saving") : t("changePassword")}
+              </Button>
+            </div>
           </form>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

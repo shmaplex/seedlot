@@ -10,21 +10,26 @@ import type { UserRole } from "@/schemas/enums";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
+  lang?: string;
   role?: UserRole;
 }
 
 export default function DashboardClientLayout({
   children,
   role = "EXPORTER",
+  lang = "en",
 }: DashboardClientLayoutProps) {
   const pathname = usePathname();
 
   const nav = navConfig[role.toLowerCase() as keyof typeof navConfig];
 
+  // prepend lang to all URLs
+  const prefixLang = (url: string) => `/${lang}${url}`;
+
   const allNavItems = [
-    ...nav.main,
-    ...nav.secondary,
-    ...nav.documents.map((d) => ({ title: d.title, url: d.url })),
+    ...nav.main.map((item) => ({ ...item, url: prefixLang(item.url) })),
+    ...nav.secondary.map((item) => ({ ...item, url: prefixLang(item.url) })),
+    ...nav.documents.map((item) => ({ ...item, url: prefixLang(item.url) })),
   ];
 
   const currentTitle =
@@ -40,7 +45,21 @@ export default function DashboardClientLayout({
           } as React.CSSProperties
         }
       >
-        <AppSidebar variant="inset" currentPath={pathname} navItems={nav} />
+        <AppSidebar
+          variant="inset"
+          currentPath={pathname}
+          navItems={{
+            main: nav.main.map((i) => ({ ...i, url: prefixLang(i.url) })),
+            secondary: nav.secondary.map((i) => ({
+              ...i,
+              url: prefixLang(i.url),
+            })),
+            documents: nav.documents.map((i) => ({
+              ...i,
+              url: prefixLang(i.url),
+            })),
+          }}
+        />
         <SidebarInset>
           <SiteHeader title={currentTitle} />
           <main className="flex flex-1 flex-col overflow-auto">

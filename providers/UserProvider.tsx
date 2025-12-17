@@ -57,7 +57,7 @@ export function UserProvider({
   const fetchProfile = useCallback(
     async (userId: string) => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("Profile")
         .select("*")
         .eq("id", userId)
         .single();

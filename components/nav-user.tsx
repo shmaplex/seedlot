@@ -27,7 +27,7 @@ import {
 import { useUser } from "@/providers/UserProvider";
 
 export function NavUser() {
-  const { user, logout } = useUser();
+  const { user, logout, lang } = useUser();
   const { isMobile } = useSidebar();
 
   const [avatarSrc, setAvatarSrc] = useState<string | undefined>(undefined);
@@ -115,7 +115,7 @@ export function NavUser() {
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/account"
+                  href={`/${lang}/account`}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-md hover:bg-muted/10"
                 >
                   <IconUserCircle size={18} /> {t("account")}

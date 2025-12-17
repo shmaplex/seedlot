@@ -9,5 +9,10 @@
   "signOut": "Sign out",
   "updateSuccess": "Profile updated successfully.",
   "updateError": "Failed to update profile.",
-  "uploadAvatar": "Upload avatar"
+  "uploadAvatar": "Upload avatar",
+  "newPassword": "New Password",
+  "newPasswordPlaceholder": "Enter a new password",
+  "changePassword": "Change Password",
+  "passwordUpdateSuccess": "Password updated successfully!",
+  "passwordUpdateError": "Failed to update password"
 }

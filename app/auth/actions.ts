@@ -6,6 +6,7 @@ import { prisma } from "@/lib/server/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { SignupSchema } from "@/schemas/auth";
 import type { UserRole } from "@/schemas/enums";
+import type { UserProfile } from "@/schemas/profile.schema";
 
 type SignupState = {
   ok?: boolean;
@@ -146,4 +147,55 @@ export async function updatePassword(newPassword: string) {
   });
 
   return { success: !error, error: error?.code };
+}
+
+/**
+ * Update a user's profile fields: fullName, username, avatarUrl
+ */
+export async function updateProfile(profile: {
+  id: string;
+  fullName?: string | null;
+  username?: string | null;
+  avatarUrl?: string | null;
+}): Promise<UserProfile | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("Profile")
+    .update({
+      fullName: profile.fullName ?? null,
+      username: profile.username ?? null,
+      avatarUrl: profile.avatarUrl ?? null,
+      updatedAt: new Date().toISOString(),
+    })
+    .eq("id", profile.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Profile update failed:", error);
+    return null;
+  }
+
+  return data as UserProfile;
+}
+
+/**
+ * Fetch a user's profile by ID
+ */
+export async function getProfile(userId: string): Promise<UserProfile | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("Profile")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    console.error("Failed to fetch profile:", error);
+    return null;
+  }
+
+  return data as UserProfile;
 }

@@ -18,10 +18,14 @@ export default async function DashboardLayout({
   if (!initialUser) {
     redirect(`/${lang}/login`);
   }
+  console.log("params", params);
 
   return (
     <>
-      <DashboardClientLayout role={initialProfile?.role ?? UserRole.EXPORTER}>
+      <DashboardClientLayout
+        lang={lang}
+        role={initialProfile?.role ?? UserRole.EXPORTER}
+      >
         {children}
       </DashboardClientLayout>
       <Toaster richColors toastOptions={{ style: { zIndex: 9999 } }} />
