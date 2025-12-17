@@ -1,6 +1,8 @@
+// components/account/account-form.tsx
 "use client";
 
 import type { User } from "@supabase/supabase-js";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,117 +15,107 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import type { UserProfile } from "@/schemas/profile.schema";
 import Avatar from "./avatar";
 
-export default function AccountForm({ user }: { user: User | null }) {
+export default function AccountForm({
+  user,
+  profile,
+}: {
+  user: User | null;
+  profile: UserProfile | null;
+}) {
+  const t = useTranslations("account");
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
-  const [fullname, setFullname] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [website, setWebsite] = useState<string | null>(null);
-  const [avatar_url, setAvatarUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fullName, setFullName] = useState<string | null>(
+    profile?.fullName ?? null,
+  );
+  const [username, setUsername] = useState<string | null>(
+    profile?.username ?? null,
+  );
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    profile?.avatarUrl ?? null,
+  );
 
-  const getProfile = useCallback(async () => {
+  const refreshProfile = useCallback(async () => {
     if (!user) return;
 
-    try {
-      setLoading(true);
+    const { data } = await supabase
+      .from("Profile")
+      .select("fullName, username, avatarUrl")
+      .eq("id", user.id)
+      .single();
 
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select("full_name, username, website, avatar_url")
-        .eq("id", user.id)
-        .single();
-
-      if (error && status !== 406) {
-        throw error;
-      }
-
-      if (data) {
-        setFullname(data.full_name);
-        setUsername(data.username);
-        setWebsite(data.website);
-        setAvatarUrl(data.avatar_url);
-      }
-    } catch {
-      alert("Error loading user data!");
-    } finally {
-      setLoading(false);
+    if (data) {
+      setFullName(data.fullName);
+      setUsername(data.username);
+      setAvatarUrl(data.avatarUrl);
     }
   }, [user, supabase]);
 
   useEffect(() => {
-    getProfile();
-  }, [getProfile]);
+    if (!profile) {
+      refreshProfile();
+    }
+  }, [profile, refreshProfile]);
 
-  async function updateProfile({
-    username,
-    website,
-    avatar_url,
-  }: {
-    fullname: string | null;
-    username: string | null;
-    website: string | null;
-    avatar_url: string | null;
-  }) {
+  async function updateProfile() {
     if (!user) return;
 
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      const { error } = await supabase.from("profiles").upsert({
-        id: user.id,
-        full_name: fullname,
-        username,
-        website,
-        avatar_url,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("Profile").update({
+      fullName,
+      username,
+      avatarUrl,
+      updatedAt: new Date().toISOString(),
+    });
 
-      if (error) throw error;
-      alert("Profile updated!");
-    } catch {
-      alert("Error updating the data!");
-    } finally {
-      setLoading(false);
+    setLoading(false);
+
+    if (error) {
+      alert(t("updateError"));
+    } else {
+      alert(t("updateSuccess"));
     }
   }
 
   return (
-    <Card className="max-w-xl">
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Account</CardTitle>
-        <CardDescription>Manage your profile information</CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
         <Avatar
           uid={user?.id ?? null}
-          url={avatar_url}
+          url={avatarUrl}
           size={150}
           onUpload={(url) => {
             setAvatarUrl(url);
-            updateProfile({ fullname, username, website, avatar_url: url });
+            updateProfile();
           }}
         />
 
         <div className="space-y-2">
-          <Label>Email</Label>
+          <Label>{t("email")}</Label>
           <Input value={user?.email ?? ""} disabled />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="fullName">Full name</Label>
+          <Label htmlFor="fullName">{t("fullName")}</Label>
           <Input
             id="fullName"
-            value={fullname ?? ""}
-            onChange={(e) => setFullname(e.target.value)}
+            value={fullName ?? ""}
+            onChange={(e) => setFullName(e.target.value)}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="username">Username</Label>
+          <Label htmlFor="username">{t("username")}</Label>
           <Input
             id="username"
             value={username ?? ""}
@@ -131,29 +123,14 @@ export default function AccountForm({ user }: { user: User | null }) {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="website">Website</Label>
-          <Input
-            id="website"
-            type="url"
-            value={website ?? ""}
-            onChange={(e) => setWebsite(e.target.value)}
-          />
-        </div>
-
         <div className="flex gap-3">
-          <Button
-            onClick={() =>
-              updateProfile({ fullname, username, website, avatar_url })
-            }
-            disabled={loading}
-          >
-            {loading ? "Saving…" : "Update profile"}
+          <Button onClick={updateProfile} disabled={loading}>
+            {loading ? t("saving") : t("update")}
           </Button>
 
           <form action="/auth/signout" method="post">
             <Button variant="outline" type="submit">
-              Sign out
+              {t("signOut")}
             </Button>
           </form>
         </div>

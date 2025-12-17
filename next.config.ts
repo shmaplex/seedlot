@@ -18,7 +18,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "api.dicebear.com", pathname: "/7.x/**" },
       {
         protocol: "https",
-        hostname: "hszzfxhmyzsjoawlqsdo.supabase.co",
+        hostname: "mlarbhgbebwugbdpxreu.supabase.co",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.shmaplex.com",
         pathname: "/**",
       },
       {

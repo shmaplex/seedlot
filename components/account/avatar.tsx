@@ -1,23 +1,27 @@
 "use client";
+
 import Image from "next/image";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export default function Avatar({
-  uid,
-  url,
-  size,
-  onUpload,
-}: {
+interface AvatarProps {
   uid: string | null;
   url: string | null;
   size: number;
   onUpload: (url: string) => void;
-}) {
+}
+
+export default function Avatar({ uid, url, size, onUpload }: AvatarProps) {
   const supabase = createClient();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(url);
   const [uploading, setUploading] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  // Dicebear fallback URL
+  const dicebearUrl = uid
+    ? `https://api.dicebear.com/7.x/pixel-art/svg?seed=${uid}`
+    : null;
 
   useEffect(() => {
     async function downloadImage(path: string) {
@@ -25,14 +29,13 @@ export default function Avatar({
         const { data, error } = await supabase.storage
           .from("avatars")
           .download(path);
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         const url = URL.createObjectURL(data);
         setAvatarUrl(url);
       } catch (error) {
         console.log("Error downloading image: ", error);
+        setAvatarUrl(null);
       }
     }
 
@@ -44,7 +47,6 @@ export default function Avatar({
   ) => {
     try {
       setUploading(true);
-
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error("You must select an image to upload.");
       }
@@ -57,11 +59,10 @@ export default function Avatar({
         .from("avatars")
         .upload(filePath, file);
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
       onUpload(filePath);
+      setAvatarUrl(null); // force re-download
     } catch (error) {
       alert("Error uploading avatar!");
     } finally {
@@ -69,39 +70,44 @@ export default function Avatar({
     }
   };
 
+  // Decide what to show: uploaded avatar > Dicebear > initials
+  const showUrl = !imgError && (avatarUrl || dicebearUrl);
+
   return (
-    <div>
-      {avatarUrl ? (
+    <div className="flex flex-col items-center gap-2">
+      {showUrl ? (
         <Image
           width={size}
           height={size}
-          src={avatarUrl}
+          src={avatarUrl || dicebearUrl!}
           alt="Avatar"
-          className="avatar image"
+          className="rounded-full border border-border object-cover"
           style={{ height: size, width: size }}
+          onError={() => setImgError(true)}
         />
       ) : (
         <div
-          className="avatar no-image"
-          style={{ height: size, width: size }}
-        />
+          className="rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium"
+          style={{ width: size, height: size }}
+        >
+          {uid ? uid.toString().slice(0, 2).toUpperCase() : "?"}
+        </div>
       )}
-      <div style={{ width: size }}>
-        <label className="button primary block" htmlFor="single">
-          {uploading ? "Uploading ..." : "Upload"}
-        </label>
-        <input
-          style={{
-            visibility: "hidden",
-            position: "absolute",
-          }}
-          type="file"
-          id="single"
-          accept="image/*"
-          onChange={uploadAvatar}
-          disabled={uploading}
-        />
-      </div>
+
+      <label
+        htmlFor="avatar-upload"
+        className="button primary block text-sm w-full text-center cursor-pointer"
+      >
+        {uploading ? "Uploading…" : "Upload"}
+      </label>
+      <input
+        id="avatar-upload"
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={uploadAvatar}
+        disabled={uploading}
+      />
     </div>
   );
 }

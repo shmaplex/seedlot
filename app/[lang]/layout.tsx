@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { Footer } from "@/components/ui/custom";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { getCurrentUserProfile } from "@/lib/auth/getCurrentUserProfile";
 import { UserProvider } from "@/providers/UserProvider";
 
 // --- Fonts ---
@@ -44,6 +45,7 @@ export default async function RootLayout({
   }
 
   const initialUser = await getCurrentUser();
+  const intialProfile = await getCurrentUserProfile();
 
   // Preload translations (optional)
   const messages = await getDictionary(lang);
@@ -63,7 +65,12 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider locale={lang} messages={messages}>
-          <UserProvider initialUser={initialUser}>{children}</UserProvider>
+          <UserProvider
+            initialUser={initialUser}
+            initialProfile={intialProfile}
+          >
+            {children}
+          </UserProvider>
           <Footer lang={lang} />
         </NextIntlClientProvider>
       </body>

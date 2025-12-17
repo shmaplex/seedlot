@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { resendConfirmation } from "@/app/auth/actions";
-import { AuthErrorNotice } from "@/components/account/auth-error-notice";
+import { AuthNotice } from "@/components/account/auth-notice";
 import { LoginForm } from "@/components/account/login-form";
 
 interface LoginPageClientProps {
@@ -13,6 +13,7 @@ interface LoginPageClientProps {
   errorDict: any;
   error: string | null;
   email: string | null;
+  notice: string | null;
 }
 
 export default function LoginPageClient({
@@ -21,6 +22,7 @@ export default function LoginPageClient({
   errorDict,
   error,
   email,
+  notice,
 }: LoginPageClientProps) {
   const [status, setStatus] = useState<"idle" | "sent">("idle");
 
@@ -34,7 +36,7 @@ export default function LoginPageClient({
     <div className="flex min-h-screen bg-background">
       {/* Left panel */}
       <div className="relative hidden h-screen w-1/2 flex-col justify-between overflow-hidden bg-primary/5 p-10 lg:flex">
-        <div className="absolute top-6 left-6 w-48 opacity-80 hover:opacity-100 duration-500 ease-in-out">
+        <div className="absolute top-6 left-6 w-48 opacity-100 hover:opacity-90 duration-500 ease-in-out">
           <Link href="/">
             <Image
               src="/png/seedlot-logo@2x.png"
@@ -59,8 +61,29 @@ export default function LoginPageClient({
       {/* Right panel */}
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-md">
+          {notice === "signup_success" && (
+            <>
+              <AuthNotice
+                variant="success"
+                messages={{
+                  signup_success: loginDict.signup_success,
+                  unknown_error: errorDict.unknown_error,
+                }}
+                code="signup_success"
+              />
+
+              <AuthNotice
+                variant="info"
+                messages={{
+                  confirm_email: loginDict.confirm_email,
+                  unknown_error: errorDict.unknown_error,
+                }}
+                code="confirm_email"
+              />
+            </>
+          )}
           {error && (
-            <AuthErrorNotice
+            <AuthNotice
               messages={{
                 invalid_credentials: errorDict.invalid_credentials,
                 otp_expired: errorDict.otp_expired,
@@ -70,7 +93,7 @@ export default function LoginPageClient({
                 confirmation_sent: loginDict.confirmation_sent,
                 resend_confirmation: loginDict.resend_confirmation,
               }}
-              error={error}
+              code={error}
               email={email}
               status={status}
               onResend={handleResend}

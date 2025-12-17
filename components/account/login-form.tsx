@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "../ui/password-input";
 
 interface LoginFormProps {
   lang: string;
@@ -47,7 +48,7 @@ export function LoginForm({ lang, loginDict }: LoginFormProps) {
               <FieldLabel htmlFor="password">
                 {loginDict.password.label}
               </FieldLabel>
-              <Input
+              <PasswordInput
                 id="password"
                 name="password"
                 type="password"

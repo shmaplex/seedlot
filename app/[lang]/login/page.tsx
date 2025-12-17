@@ -19,12 +19,17 @@ export default async function LoginPage({
   const dict = await getDictionary(lang as Locale);
   const { login: loginDict, errors: errorDict } = dict.auth;
 
+  const notice: string | null = Array.isArray(sp?.notice)
+    ? sp.notice[0]
+    : (sp?.notice ?? null);
+
   return (
     <LoginPageClient
       lang={lang}
       loginDict={loginDict}
       errorDict={errorDict}
       error={error}
+      notice={notice}
       email={email}
     />
   );

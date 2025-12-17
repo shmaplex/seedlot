@@ -1,0 +1,13 @@
+{
+  "title": "Account",
+  "description": "Manage your profile information",
+  "email": "Email",
+  "fullName": "Full name",
+  "username": "Username",
+  "update": "Update profile",
+  "saving": "Saving…",
+  "signOut": "Sign out",
+  "updateSuccess": "Profile updated successfully.",
+  "updateError": "Failed to update profile.",
+  "uploadAvatar": "Upload avatar"
+}

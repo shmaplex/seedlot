@@ -53,7 +53,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
     // Dicebear API fallback
     const dicebearUrl =
       userId && !src
-        ? `https://api.dicebear.com/6.x/pixel-art/svg?seed=${userId}`
+        ? `https://api.dicebear.com/7.x/pixel-art/svg?seed=${userId}`
         : undefined;
 
     const backgroundImage =

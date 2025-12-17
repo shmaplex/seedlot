@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import React, { useEffect } from "react";
+import { useFormStatus } from "react-dom";
+import { toast } from "sonner";
 import { signup } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,110 +20,213 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PUBLIC_SIGNUP_ROLES } from "@/lib/auth/allowed-roles";
 
-interface SignupFormProps {
-  lang: string;
-  signupDict: any;
-  disableSocialLogin?: boolean; // new prop
+type SignupState = {
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+};
+
+function SubmitButton({
+  label,
+  disabled,
+}: {
+  label: string;
+  disabled: boolean;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" disabled={disabled || pending} className="w-full">
+      {pending ? "…" : label}
+    </Button>
+  );
 }
 
 export function SignupForm({
   lang,
   signupDict,
+  errorsDict,
   disableSocialLogin = true,
-}: SignupFormProps) {
+}: {
+  lang: string;
+  signupDict: any;
+  errorsDict: any;
+  disableSocialLogin?: boolean;
+}) {
+  const [form, setForm] = React.useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "",
+  });
+
+  const passwordsMismatch =
+    form.confirmPassword.length > 0 && form.password !== form.confirmPassword;
+
+  function update<K extends keyof typeof form>(
+    key: K,
+    value: (typeof form)[K],
+  ) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  const [state, formAction] = React.useActionState<SignupState, FormData>(
+    (_, data) => signup(data, lang),
+    {},
+  );
+
+  useEffect(() => {
+    if (state.error) {
+      toast.error(errorsDict[state.error] ?? errorsDict.unknown_error);
+    }
+  }, [state.error, errorsDict]);
+
+  const isValid = !!form.role && !passwordsMismatch;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{signupDict.title}</CardTitle>
         <CardDescription>{signupDict.description}</CardDescription>
       </CardHeader>
+
       <CardContent>
-        <form
-          action={(data: FormData) => signup(data, lang)}
-          className="space-y-4"
-        >
+        <form action={formAction} className="space-y-4">
           <FieldGroup>
+            {/* Full name */}
             <Field>
-              <FieldLabel htmlFor="name">{signupDict.name.label}</FieldLabel>
+              <FieldLabel>{signupDict.name.label}</FieldLabel>
               <Input
-                id="name"
-                name="name"
-                type="text"
+                name="fullName"
+                value={form.fullName}
+                onChange={(e) => update("fullName", e.target.value)}
                 placeholder={signupDict.name.placeholder}
                 required
               />
+              {state.fieldErrors?.fullName && (
+                <FieldDescription className="text-destructive">
+                  {state.fieldErrors.fullName[0]}
+                </FieldDescription>
+              )}
             </Field>
 
+            {/* Email */}
             <Field>
-              <FieldLabel htmlFor="email">{signupDict.email.label}</FieldLabel>
+              <FieldLabel>{signupDict.email.label}</FieldLabel>
               <Input
-                id="email"
                 name="email"
                 type="email"
+                value={form.email}
+                onChange={(e) => update("email", e.target.value)}
                 placeholder={signupDict.email.placeholder}
                 required
               />
-              <FieldDescription>
-                {signupDict.email.description}
-              </FieldDescription>
+              {signupDict.email.description && (
+                <FieldDescription>
+                  {signupDict.email.description}
+                </FieldDescription>
+              )}
             </Field>
 
+            {/* Password */}
             <Field>
-              <FieldLabel htmlFor="password">
-                {signupDict.password.label}
-              </FieldLabel>
-              <Input
-                id="password"
+              <FieldLabel>{signupDict.password.label}</FieldLabel>
+              <PasswordInput
                 name="password"
-                type="password"
+                value={form.password}
+                onChange={(e) => update("password", e.target.value)}
                 placeholder={signupDict.password.placeholder}
                 required
               />
-              <FieldDescription>
-                {signupDict.password.description}
-              </FieldDescription>
+              {signupDict.password.description && (
+                <FieldDescription>
+                  {signupDict.password.description}
+                </FieldDescription>
+              )}
             </Field>
 
+            {/* Confirm password */}
             <Field>
-              <FieldLabel htmlFor="confirm-password">
-                {signupDict.confirmPassword.label}
-              </FieldLabel>
-              <Input
-                id="confirm-password"
-                name="confirm-password"
-                type="password"
+              <FieldLabel>{signupDict.confirmPassword.label}</FieldLabel>
+              <PasswordInput
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={(e) => update("confirmPassword", e.target.value)}
                 placeholder={signupDict.confirmPassword.placeholder}
                 required
               />
-              <FieldDescription>
-                {signupDict.confirmPassword.description}
-              </FieldDescription>
+              {signupDict.confirmPassword.description && (
+                <FieldDescription>
+                  {signupDict.confirmPassword.description}
+                </FieldDescription>
+              )}
             </Field>
 
-            <FieldGroup>
-              <Field className="space-y-2">
-                <Button type="submit" className="w-full">
-                  {signupDict.submit}
-                </Button>
+            {passwordsMismatch && (
+              <FieldDescription className="text-destructive">
+                {errorsDict.password_mismatch ??
+                  errorsDict.unknown_error ??
+                  "Passwords do not match."}
+              </FieldDescription>
+            )}
 
-                {!disableSocialLogin && (
-                  <Button variant="outline" type="button" className="w-full">
-                    {signupDict.socialLogin || "Sign up with Google"}
-                  </Button>
-                )}
+            {/* Role */}
+            <Field>
+              <FieldLabel>{signupDict.role.label}</FieldLabel>
 
-                <FieldDescription className="px-6 text-center">
-                  {signupDict.haveAccount}{" "}
-                  <Link
-                    href={`/${lang}/login`}
-                    className="font-medium underline-offset-4 hover:underline"
-                  >
-                    {signupDict.loginLink}
-                  </Link>
+              <Select
+                value={form.role}
+                onValueChange={(value) => update("role", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={signupDict.role.placeholder} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {PUBLIC_SIGNUP_ROLES.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {signupDict.roles?.[role] ?? role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <input type="hidden" name="role" value={form.role} />
+
+              {signupDict.role.description && (
+                <FieldDescription>
+                  {signupDict.role.description}
                 </FieldDescription>
-              </Field>
-            </FieldGroup>
+              )}
+            </Field>
+
+            {/* Submit */}
+            <SubmitButton label={signupDict.submit} disabled={!isValid} />
+
+            {/* Social login */}
+            {!disableSocialLogin && (
+              <Button variant="outline" type="button" className="w-full">
+                {signupDict.socialLogin}
+              </Button>
+            )}
+
+            {/* Footer */}
+            <FieldDescription className="text-center">
+              {signupDict.haveAccount}{" "}
+              <Link href={`/${lang}/login`} className="underline">
+                {signupDict.loginLink}
+              </Link>
+            </FieldDescription>
           </FieldGroup>
         </form>
       </CardContent>

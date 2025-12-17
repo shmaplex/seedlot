@@ -1,33 +1,21 @@
-"use client";
+// app/[lang]/account/page.tsx
+import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { getCurrentUserProfile } from "@/lib/auth/getCurrentUserProfile";
+import AccountPageClient from "./page.client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import AccountForm from "@/components/account/account-form";
-import { Loader } from "@/components/ui/loader";
-import { useUser } from "@/providers/UserProvider";
-
-export default function AccountPage() {
-  const { user, loading } = useUser();
-  const router = useRouter();
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [loading, user, router]);
-
-  if (loading || !user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader message="Loading your account..." />
-      </div>
-    );
-  }
+export default async function AccountPage({
+  params,
+}: {
+  params: { lang: string };
+}) {
+  const initialUser = await getCurrentUser();
+  const initialUserProfile = await getCurrentUserProfile();
 
   return (
-    <div className="min-h-screen bg-background p-8 flex justify-center">
-      <AccountForm user={user} />
-    </div>
+    <AccountPageClient
+      lang={params.lang}
+      initialUserProfile={initialUserProfile}
+      initialUser={initialUser}
+    />
   );
 }

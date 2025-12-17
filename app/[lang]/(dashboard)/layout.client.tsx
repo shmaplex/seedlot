@@ -6,19 +6,20 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { navConfig } from "@/data/nav";
+import type { UserRole } from "@/schemas/enums";
 
 interface DashboardClientLayoutProps {
   children: React.ReactNode;
-  role: "exporter" | "supplier" | "inspector" | "internal" | "importer";
+  role?: UserRole;
 }
 
 export default function DashboardClientLayout({
   children,
-  role = "exporter",
+  role = "EXPORTER",
 }: DashboardClientLayoutProps) {
   const pathname = usePathname();
 
-  const nav = navConfig[role];
+  const nav = navConfig[role.toLowerCase() as keyof typeof navConfig];
 
   const allNavItems = [
     ...nav.main,

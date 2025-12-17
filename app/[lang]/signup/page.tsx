@@ -13,6 +13,13 @@ export default async function SignupPage({
   // Fetch translations for the signup page
   const dict = await getDictionary(lang as Locale);
   const signupDict = dict.auth.signup;
+  const errorsDict = dict.auth.errors;
 
-  return <SignupPageClient lang={lang} signupDict={signupDict} />;
+  return (
+    <SignupPageClient
+      lang={lang}
+      errorsDict={errorsDict}
+      signupDict={signupDict}
+    />
+  );
 }

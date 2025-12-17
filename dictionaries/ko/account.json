@@ -1,0 +1,13 @@
+{
+  "title": "계정",
+  "description": "프로필 정보를 관리하세요",
+  "email": "이메일",
+  "fullName": "이름",
+  "username": "사용자 이름",
+  "update": "프로필 업데이트",
+  "saving": "저장 중…",
+  "signOut": "로그아웃",
+  "updateSuccess": "프로필이 업데이트되었습니다.",
+  "updateError": "프로필 업데이트에 실패했습니다.",
+  "uploadAvatar": "아바타 업로드"
+}

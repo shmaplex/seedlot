@@ -7,17 +7,19 @@ import { SignupForm } from "@/components/account/signup-form";
 interface SignupPageClientProps {
   lang: string;
   signupDict: any;
+  errorsDict: any;
 }
 
 export default function SignupPageClient({
   lang,
   signupDict,
+  errorsDict,
 }: SignupPageClientProps) {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Left panel */}
       <div className="relative hidden h-screen w-1/2 flex-col justify-between overflow-hidden bg-primary/5 p-10 lg:flex">
-        <div className="absolute top-6 left-6 w-48 opacity-80 hover:opacity-100 duration-500 ease-in-out">
+        <div className="absolute top-6 left-6 w-48 opacity-100 hover:opacity-90 duration-500 ease-in-out">
           <Link href="/">
             <Image
               src="/png/seedlot-logo@2x.png"
@@ -41,7 +43,11 @@ export default function SignupPageClient({
       {/* Right panel */}
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <SignupForm lang={lang} signupDict={signupDict} />
+          <SignupForm
+            lang={lang}
+            errorsDict={errorsDict}
+            signupDict={signupDict}
+          />
         </div>
       </div>
     </div>

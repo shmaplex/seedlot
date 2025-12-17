@@ -8,12 +8,17 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-import { createClient } from "@/lib/supabase/client"; // your Supabase client
+import { createClient } from "@/lib/supabase/client";
+import type { UserProfile } from "@/schemas/profile.schema";
+
+/** ---- Types ---- */
 
 interface UserContextValue {
   user: User | null;
+  profile: UserProfile | null;
   loading: boolean;
   lang: string;
   refreshUser: () => Promise<void>;
@@ -22,66 +27,127 @@ interface UserContextValue {
 
 interface UserProviderProps {
   children: ReactNode;
-  initialUser?: User | null; // Accept server-provided user
+  initialUser?: User | null;
+  initialProfile?: UserProfile | null;
 }
 
+/** ---- Context ---- */
+
 const UserContext = createContext<UserContextValue | undefined>(undefined);
+
+/** ---- Provider ---- */
 
 export function UserProvider({
   children,
   initialUser = null,
+  initialProfile = null,
 }: UserProviderProps) {
+  const supabase = useMemo(() => createClient(), []);
+
   const [user, setUser] = useState<User | null>(initialUser);
+  const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
   const [loading, setLoading] = useState(!initialUser);
-  const [lang, setLang] = useState<string>("en"); // default to "en"
+  const [lang, setLang] = useState<string>(
+    initialProfile?.preferredLang ||
+      (initialUser?.user_metadata?.preferred_lang as string) ||
+      "en",
+  );
 
-  const supabase = createClient();
+  /** ---- Load profile from DB ---- */
+  const fetchProfile = useCallback(
+    async (userId: string) => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
+      if (!error && data) {
+        setProfile(data as UserProfile);
+        setLang(data.lang || "en");
+      } else {
+        setProfile(null);
+      }
+    },
+    [supabase],
+  );
+
+  /** ---- Load auth user + profile ---- */
   const fetchUser = useCallback(async () => {
     setLoading(true);
+
     const { data, error } = await supabase.auth.getUser();
-    if (!error && data.user) {
-      setUser(data.user);
-      // Read language from user metadata if exists
-      setLang((data.user.user_metadata?.lang as string) || "en");
-    } else {
+
+    if (error || !data.user) {
       setUser(null);
+      setProfile(null);
       setLang("en");
-    }
-    setLoading(false);
-  }, [supabase.auth]);
-
-  const logout = useCallback(
-    async (redirectLang: string = lang) => {
-      setLoading(true);
-      await supabase.auth.signOut();
-      setUser(null);
       setLoading(false);
-      redirect(`/${redirectLang}/login`);
-    },
-    [supabase.auth, lang],
-  );
+      return;
+    }
 
+    setUser(data.user);
+
+    // Prefer profile lang, fallback to metadata
+    setLang(
+      (data.user.user_metadata?.preferred_lang as string | undefined) || "en",
+    );
+
+    await fetchProfile(data.user.id);
+
+    setLoading(false);
+  }, [supabase, fetchProfile]);
+
+  /** ---- Logout ---- */
+  const logout = useCallback(async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+    setLoading(false);
+    redirect(`/${lang}/login`);
+  }, [supabase, lang]);
+
+  /** ---- Effects ---- */
   useEffect(() => {
-    if (!initialUser) fetchUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+    if (!initialUser) {
       fetchUser();
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        fetchProfile(session.user.id);
+      } else {
+        setUser(null);
+        setProfile(null);
+        setLang("en");
+      }
     });
 
-    return () => listener.subscription.unsubscribe();
-  }, [fetchUser, supabase, initialUser]);
+    return () => subscription.unsubscribe();
+  }, [supabase, fetchUser, fetchProfile, initialUser]);
 
-  return (
-    <UserContext.Provider
-      value={{ user, loading, lang, refreshUser: fetchUser, logout }}
-    >
-      {children}
-    </UserContext.Provider>
+  /** ---- Context value ---- */
+  const value = useMemo<UserContextValue>(
+    () => ({
+      user,
+      profile,
+      loading,
+      lang,
+      refreshUser: fetchUser,
+      logout,
+    }),
+    [user, profile, loading, lang, fetchUser, logout],
   );
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
-// Updated hook
+/** ---- Hook ---- */
+
 export function useUser() {
   const context = useContext(UserContext);
   if (!context) {

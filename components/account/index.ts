@@ -1,6 +1,5 @@
 export * from "./account-form";
-export * from "./auth-callback-error";
-export * from "./auth-error-notice";
+export * from "./auth-notice";
 export * from "./avatar";
 export * from "./not-logged-in";
 export * from "./resend-confirmation";

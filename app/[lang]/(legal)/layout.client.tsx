@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 interface LegalLayoutClientProps {
@@ -14,14 +15,16 @@ export default function LegalLayoutClient({
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header with logo */}
       <header className="flex justify-center py-4">
-        <Image
-          src="/png/seedlot-logo@2x.png"
-          alt="Seedlot logo"
-          width={150}
-          height={50}
-          style={{ objectFit: "contain" }}
-          priority
-        />
+        <Link href="/">
+          <Image
+            src="/png/seedlot-logo@2x.png"
+            alt="Seedlot logo"
+            width={150}
+            height={50}
+            style={{ objectFit: "contain" }}
+            priority
+          />
+        </Link>
       </header>
 
       {/* Main content */}
