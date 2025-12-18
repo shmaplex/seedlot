@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { resendConfirmation } from "@/app/auth/actions";
+import { resendConfirmation } from "@/app/actions/auth";
 import { AuthNotice } from "@/components/account/auth-notice";
 import { LoginForm } from "@/components/account/login-form";
 

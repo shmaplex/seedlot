@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { signup } from "@/app/auth/actions";
+import { signup } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,

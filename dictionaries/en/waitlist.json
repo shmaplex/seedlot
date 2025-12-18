@@ -1,0 +1,24 @@
+{
+  "title": "Join the Waitlist 🚀",
+  "description": "Sign up for early access to SeedLot — simplify small-lot seed exports, reduce inspection friction, and get your SKUs routed correctly from day one.",
+  "form": {
+    "placeholders": {
+      "email": "Email",
+      "name": "Your Name",
+      "company": "Company",
+      "role": "Your Role",
+      "interest": "Seed types / export focus",
+      "source": "How did you hear about us?",
+      "notes": "Anything else you'd like us to know?"
+    },
+    "labels": {
+      "importance": "How important is this to you?"
+    },
+    "submit": "Join Waitlist"
+  },
+  "success": {
+    "title": "You're on the list!",
+    "message": "Thanks for your interest. We'll reach out soon."
+  },
+  "error": "Failed to submit waitlist signup"
+}

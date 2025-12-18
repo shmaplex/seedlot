@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { resendConfirmation } from "@/app/auth/actions";
+import { resendConfirmation } from "@/app/actions/auth";
 
 export function ResendConfirm({ email }: { email: string }) {
   const [status, setStatus] = useState<"idle" | "sent" | "error">("idle");

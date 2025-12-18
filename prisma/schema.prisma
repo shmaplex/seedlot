@@ -5,225 +5,195 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["auth", "public"]
 }
 
-/// ----------------------
-/// ENUMS
-/// ----------------------
-enum RegulatoryPath {
-  PPQ_587_SMALL_LOT
-  PHYTOSANITARY_REQUIRED
-  BULK_IMPORT_DOMESTIC_FULFILLMENT
-  EXPORT_PROHIBITED
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model User {
+  instance_id                 String?                @db.Uuid
+  id                          String                 @id @db.Uuid
+  aud                         String?                @db.VarChar(255)
+  role                        String?                @db.VarChar(255)
+  email                       String?                @db.VarChar(255)
+  encrypted_password          String?                @db.VarChar(255)
+  email_confirmed_at          DateTime?              @db.Timestamptz(6)
+  invited_at                  DateTime?              @db.Timestamptz(6)
+  confirmation_token          String?                @db.VarChar(255)
+  confirmation_sent_at        DateTime?              @db.Timestamptz(6)
+  recovery_token              String?                @db.VarChar(255)
+  recovery_sent_at            DateTime?              @db.Timestamptz(6)
+  email_change_token_new      String?                @db.VarChar(255)
+  email_change                String?                @db.VarChar(255)
+  email_change_sent_at        DateTime?              @db.Timestamptz(6)
+  last_sign_in_at             DateTime?              @db.Timestamptz(6)
+  raw_app_meta_data           Json?
+  raw_user_meta_data          Json?
+  is_super_admin              Boolean?
+  created_at                  DateTime?              @db.Timestamptz(6)
+  updated_at                  DateTime?              @db.Timestamptz(6)
+  phone                       String?                @unique
+  phone_confirmed_at          DateTime?              @db.Timestamptz(6)
+  phone_change                String?                @default("")
+  phone_change_token          String?                @default("") @db.VarChar(255)
+  phone_change_sent_at        DateTime?              @db.Timestamptz(6)
+  confirmed_at                DateTime?              @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
+  email_change_token_current  String?                @default("") @db.VarChar(255)
+  email_change_confirm_status Int?                   @default(0) @db.SmallInt
+  banned_until                DateTime?              @db.Timestamptz(6)
+  reauthentication_token      String?                @default("") @db.VarChar(255)
+  reauthentication_sent_at    DateTime?              @db.Timestamptz(6)
+  is_sso_user                 Boolean                @default(false)
+  deleted_at                  DateTime?              @db.Timestamptz(6)
+  is_anonymous                Boolean                @default(false)
+  identities                  identities[]
+  mfa_factors                 mfa_factors[]
+  oauth_authorizations        oauth_authorizations[]
+  oauth_consents              oauth_consents[]
+  one_time_tokens             one_time_tokens[]
+  sessions                    sessions[]
+  Profile                     Profile?
+
+  @@index([instance_id])
+  @@index([is_anonymous])
+  @@map("users")
+  @@schema("auth")
 }
 
-enum RiskClass {
-  LOW
-  MEDIUM
-  HIGH
-  UNKNOWN
-}
-
-enum SeedUse {
-  HOBBY
-  RESEARCH
-  COMMERCIAL
-}
-
-enum PedigreeStatus {
-  NON_PEDIGREED
-  CERTIFIED
-  UNKNOWN
-}
-
-enum InspectionStatus {
-  PENDING
-  PASSED
-  FAILED
-  CONDITIONAL
-}
-
-enum SeedLotSubmissionStatus {
-  PENDING
-  VALIDATED
-  REJECTED
-}
-
-enum RegulatoryAssessmentStatus {
-  PENDING
-  COMPLETED
-}
-
-enum UserRole {
-  EXPORTER
-  SUPPLIER
-  INSPECTOR
-  INTERNAL
-  IMPORTER
-}
-
-/// ----------------------
-/// MODELS
-/// ----------------------
-
-// ----------------------
-// PROFILE / USER MODEL
-// ----------------------
 model Profile {
-  id        String  @id @db.Uuid
-  email     String  @unique
-  fullName  String?
-  username  String? @unique
-  avatarUrl String?
-
-  role        UserRole @default(EXPORTER)
-  permissions Json?
-
-  preferredLang String? @default("en")
-  timezone      String?
-  settings      Json?
-
-  // Managed organizations
-  managedOrgs Organization[] @relation("ProfileManagedOrganizations")
-
-  // Reverse relations for auditing
-  seedLotsCreated      SeedLot[]                  @relation("SeedLotCreatedBy")
-  seedLotsUpdated      SeedLot[]                  @relation("SeedLotUpdatedBy")
-  suppliersCreated     Supplier[]                 @relation("SupplierCreatedBy")
-  suppliersUpdated     Supplier[]                 @relation("SupplierUpdatedBy")
-  orgsCreated          Organization[]             @relation("OrgCreatedBy")
-  orgsUpdated          Organization[]             @relation("OrgUpdatedBy")
-  assessmentsCreated   RegulatoryAssessment[]     @relation("AssessmentCreatedBy")
-  assessmentsUpdated   RegulatoryAssessment[]     @relation("AssessmentUpdatedBy")
-  shipmentsCreated     Shipment[]                 @relation("ShipmentCreatedBy")
-  shipmentsUpdated     Shipment[]                 @relation("ShipmentUpdatedBy")
-  certificatesCreated  PhytosanitaryCertificate[] @relation("CertificateCreatedBy")
-  certificatesUpdated  PhytosanitaryCertificate[] @relation("CertificateUpdatedBy")
+  id                   String                     @id @db.Uuid
+  email                String                     @unique
+  fullName             String?
+  username             String?                    @unique
+  avatarUrl            String?
+  role                 UserRole                   @default(EXPORTER)
+  permissions          Json?
+  preferredLang        String?                    @default("en")
+  timezone             String?
+  settings             Json?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  archivedEvidence     Evidence[]                 @relation("EvidenceArchivedBy")
   evidenceCreated      Evidence[]                 @relation("EvidenceCreatedBy")
   evidenceUpdated      Evidence[]                 @relation("EvidenceUpdatedBy")
   archivedEntities     Organization[]             @relation("OrgArchivedBy")
-  archivedSuppliers    Supplier[]                 @relation("SupplierArchivedBy")
-  archivedSeedLots     SeedLot[]                  @relation("SeedLotArchivedBy")
-  archivedAssessments  RegulatoryAssessment[]     @relation("AssessmentArchivedBy")
-  archivedShipments    Shipment[]                 @relation("ShipmentArchivedBy")
+  orgsCreated          Organization[]             @relation("OrgCreatedBy")
+  managedOrgs          Organization[]             @relation("ProfileManagedOrganizations")
+  orgsUpdated          Organization[]             @relation("OrgUpdatedBy")
   archivedCertificates PhytosanitaryCertificate[] @relation("CertificateArchivedBy")
-  archivedEvidence     Evidence[]                 @relation("EvidenceArchivedBy")
+  certificatesCreated  PhytosanitaryCertificate[] @relation("CertificateCreatedBy")
+  certificatesUpdated  PhytosanitaryCertificate[] @relation("CertificateUpdatedBy")
+  users                User                       @relation(fields: [id], references: [id], onDelete: Cascade)
+  archivedAssessments  RegulatoryAssessment[]     @relation("AssessmentArchivedBy")
+  assessmentsCreated   RegulatoryAssessment[]     @relation("AssessmentCreatedBy")
+  assessmentsUpdated   RegulatoryAssessment[]     @relation("AssessmentUpdatedBy")
+  archivedSeedLots     SeedLot[]                  @relation("SeedLotArchivedBy")
+  seedLotsCreated      SeedLot[]                  @relation("SeedLotCreatedBy")
+  seedLotsUpdated      SeedLot[]                  @relation("SeedLotUpdatedBy")
+  archivedShipments    Shipment[]                 @relation("ShipmentArchivedBy")
+  shipmentsCreated     Shipment[]                 @relation("ShipmentCreatedBy")
+  shipmentsUpdated     Shipment[]                 @relation("ShipmentUpdatedBy")
+  archivedSuppliers    Supplier[]                 @relation("SupplierArchivedBy")
+  suppliersCreated     Supplier[]                 @relation("SupplierCreatedBy")
+  suppliersUpdated     Supplier[]                 @relation("SupplierUpdatedBy")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@schema("public")
 }
 
-// ----------------------
-// ORGANIZATION
-// ----------------------
 model Organization {
-  id                     String    @id @default(uuid())
+  id                     String                     @id @default(uuid())
   name                   String
   country                String
-  registrationNumber     String?   @unique
-  nppoExporterAuthorized Boolean   @default(false)
+  registrationNumber     String?                    @unique
+  nppoExporterAuthorized Boolean                    @default(false)
   nppoExporterId         String?
-  importerOfRecord       Boolean   @default(false)
-  complianceEmail        String?   @unique
+  importerOfRecord       Boolean                    @default(false)
+  complianceEmail        String?                    @unique
   notes                  String?
   complianceFlags        Json?
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @default(now())
   archivedAt             DateTime?
-  archivedById           String?   @db.Uuid
-  archivedBy             Profile?  @relation("OrgArchivedBy", fields: [archivedById], references: [id])
+  archivedById           String?                    @db.Uuid
+  ownerProfileId         String?                    @db.Uuid
+  createdById            String?                    @db.Uuid
+  updatedById            String?                    @db.Uuid
+  archivedBy             Profile?                   @relation("OrgArchivedBy", fields: [archivedById], references: [id])
+  createdBy              Profile?                   @relation("OrgCreatedBy", fields: [createdById], references: [id])
+  ownerProfile           Profile?                   @relation("ProfileManagedOrganizations", fields: [ownerProfileId], references: [id])
+  updatedBy              Profile?                   @relation("OrgUpdatedBy", fields: [updatedById], references: [id])
+  exportedCertificates   PhytosanitaryCertificate[]
+  seedLots               SeedLot[]
+  shipmentsAsExporter    Shipment[]
+  suppliers              Supplier[]
 
-  suppliers            Supplier[]
-  seedLots             SeedLot[]
-  exportedCertificates PhytosanitaryCertificate[]
-  shipmentsAsExporter  Shipment[]
-
-  ownerProfileId String?  @db.Uuid
-  ownerProfile   Profile? @relation("ProfileManagedOrganizations", fields: [ownerProfileId], references: [id])
-
-  createdById String?  @db.Uuid
-  createdBy   Profile? @relation("OrgCreatedBy", fields: [createdById], references: [id])
-  updatedById String?  @db.Uuid
-  updatedBy   Profile? @relation("OrgUpdatedBy", fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  @@schema("public")
 }
 
-// ----------------------
-// SUPPLIER
-// ----------------------
 model Supplier {
-  id                     String    @id @default(uuid())
+  id                     String       @id @default(uuid())
   orgId                  String
   legalName              String
   country                String
   productionLocation     String
   supplierRegistrationId String?
   nppoRegistered         Boolean?
-  contactEmail           String    @unique
+  contactEmail           String       @unique
   productionPractices    Json?
   exportHistoryCountries Json?
   notes                  String?
   riskIndicators         Json?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @default(now())
   archivedAt             DateTime?
-  archivedById           String?   @db.Uuid
-  archivedBy             Profile?  @relation("SupplierArchivedBy", fields: [archivedById], references: [id])
+  archivedById           String?      @db.Uuid
+  createdById            String?      @db.Uuid
+  updatedById            String?      @db.Uuid
+  seedLots               SeedLot[]
+  archivedBy             Profile?     @relation("SupplierArchivedBy", fields: [archivedById], references: [id])
+  createdBy              Profile?     @relation("SupplierCreatedBy", fields: [createdById], references: [id])
+  org                    Organization @relation(fields: [orgId], references: [id])
+  updatedBy              Profile?     @relation("SupplierUpdatedBy", fields: [updatedById], references: [id])
 
-  org      Organization @relation(fields: [orgId], references: [id])
-  seedLots SeedLot[]
-
-  createdById String?  @db.Uuid
-  createdBy   Profile? @relation("SupplierCreatedBy", fields: [createdById], references: [id])
-  updatedById String?  @db.Uuid
-  updatedBy   Profile? @relation("SupplierUpdatedBy", fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  @@schema("public")
 }
 
-// ----------------------
-// SEED LOT
-// ----------------------
 model SeedLot {
-  id                  String                  @id @default(uuid())
-  orgId               String
-  supplierId          String
-  lotCode             String
-  seedBiologyId       String?
-  seedBiology         SeedBiology?            @relation(fields: [seedBiologyId], references: [id])
-  originCountry       String
-  seedUse             SeedUse
-  pedigreeStatus      PedigreeStatus
-  quantityAvailable   Int?
-  harvestYear         Int?
-  storageConditions   String?
-  internalNotes       String?
-  regulatoryPath      RegulatoryPath?
-  riskClass           RiskClass?
-  knownQuarantineRisk Boolean?
-  submissionStatus    SeedLotSubmissionStatus @default(PENDING)
-  latestAssessmentId  String?                 @unique
-  latestAssessment    RegulatoryAssessment?   @relation("LatestAssessment", fields: [latestAssessmentId], references: [id])
-  archivedAt          DateTime?
-  archivedById        String?                 @db.Uuid
-  archivedBy          Profile?                @relation("SeedLotArchivedBy", fields: [archivedById], references: [id])
-
-  org                   Organization           @relation(fields: [orgId], references: [id])
-  supplier              Supplier               @relation(fields: [supplierId], references: [id])
-  regulatoryAssessments RegulatoryAssessment[] @relation("AllAssessments")
+  id                    String                  @id @default(uuid())
+  orgId                 String
+  supplierId            String
+  lotCode               String
+  originCountry         String
+  seedUse               SeedUse
+  pedigreeStatus        PedigreeStatus
+  quantityAvailable     Int?
+  harvestYear           Int?
+  storageConditions     String?
+  internalNotes         String?
+  regulatoryPath        RegulatoryPath?
+  riskClass             RiskClass?
+  knownQuarantineRisk   Boolean?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
+  latestAssessmentId    String?                 @unique
+  seedBiologyId         String?
+  submissionStatus      SeedLotSubmissionStatus @default(PENDING)
+  archivedAt            DateTime?
+  archivedById          String?                 @db.Uuid
+  createdById           String?                 @db.Uuid
+  updatedById           String?                 @db.Uuid
   ppqCompliance         PPQ587Compliance?
+  regulatoryAssessments RegulatoryAssessment[]  @relation("AllAssessments")
+  archivedBy            Profile?                @relation("SeedLotArchivedBy", fields: [archivedById], references: [id])
+  createdBy             Profile?                @relation("SeedLotCreatedBy", fields: [createdById], references: [id])
+  latestAssessment      RegulatoryAssessment?   @relation("LatestAssessment", fields: [latestAssessmentId], references: [id])
+  org                   Organization            @relation(fields: [orgId], references: [id])
+  seedBiology           SeedBiology?            @relation(fields: [seedBiologyId], references: [id])
+  supplier              Supplier                @relation(fields: [supplierId], references: [id])
+  updatedBy             Profile?                @relation("SeedLotUpdatedBy", fields: [updatedById], references: [id])
 
-  createdById String?  @db.Uuid
-  createdBy   Profile? @relation("SeedLotCreatedBy", fields: [createdById], references: [id])
-  updatedById String?  @db.Uuid
-  updatedBy   Profile? @relation("SeedLotUpdatedBy", fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  @@schema("public")
 }
 
-// ----------------------
-// SEED BIOLOGY
-// ----------------------
 model SeedBiology {
   id                  String     @id @default(uuid())
   scientificName      String
@@ -236,13 +206,11 @@ model SeedBiology {
   biologicalRiskClass RiskClass?
   breedingType        String?
   biologyNotes        String?
+  seedLots            SeedLot[]
 
-  seedLots SeedLot[]
+  @@schema("public")
 }
 
-// ----------------------
-// REGULATORY ASSESSMENT
-// ----------------------
 model RegulatoryAssessment {
   id                 String                     @id @default(uuid())
   seedLotId          String
@@ -260,73 +228,62 @@ model RegulatoryAssessment {
   validUntil         DateTime                   @default(now())
   status             RegulatoryAssessmentStatus @default(PENDING)
   archivedAt         DateTime?
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @default(now())
   archivedById       String?                    @db.Uuid
+  createdById        String?                    @db.Uuid
+  updatedById        String?                    @db.Uuid
+  decisionBases      DecisionBasis[]
   archivedBy         Profile?                   @relation("AssessmentArchivedBy", fields: [archivedById], references: [id])
+  createdBy          Profile?                   @relation("AssessmentCreatedBy", fields: [createdById], references: [id])
+  seedLot            SeedLot                    @relation("AllAssessments", fields: [seedLotId], references: [id])
+  updatedBy          Profile?                   @relation("AssessmentUpdatedBy", fields: [updatedById], references: [id])
+  latestOfSeedLot    SeedLot?                   @relation("LatestAssessment")
 
-  seedLot       SeedLot         @relation("AllAssessments", fields: [seedLotId], references: [id])
-  decisionBases DecisionBasis[]
-
-  latestOfSeedLot SeedLot? @relation("LatestAssessment")
-
-  createdById String?  @db.Uuid
-  createdBy   Profile? @relation("AssessmentCreatedBy", fields: [createdById], references: [id])
-  updatedById String?  @db.Uuid
-  updatedBy   Profile? @relation("AssessmentUpdatedBy", fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  @@schema("public")
 }
 
-// ----------------------
-// DECISION BASIS
-// ----------------------
 model DecisionBasis {
-  id                     String   @id @default(uuid())
+  id                     String               @id @default(uuid())
   regulatoryAssessmentId String
   evidenceId             String
   justificationAspect    String
-  decisive               Boolean  @default(false)
+  decisive               Boolean              @default(false)
   explanation            String?
-  createdAt              DateTime @default(now())
+  createdAt              DateTime             @default(now())
+  evidence               Evidence             @relation(fields: [evidenceId], references: [id])
+  regulatoryAssessment   RegulatoryAssessment @relation(fields: [regulatoryAssessmentId], references: [id])
 
-  regulatoryAssessment RegulatoryAssessment @relation(fields: [regulatoryAssessmentId], references: [id])
-  evidence             Evidence             @relation(fields: [evidenceId], references: [id])
+  @@schema("public")
 }
 
-// ----------------------
-// EVIDENCE
-// ----------------------
 model Evidence {
-  id                     String    @id @default(uuid())
+  id                     String          @id @default(uuid())
   type                   String
   title                  String
   summary                String?
   sourceReference        String?
   contentHash            String?
   confidence             Float?
-  authoritative          Boolean   @default(false)
-  active                 Boolean   @default(true)
+  authoritative          Boolean         @default(false)
+  active                 Boolean         @default(true)
   supersededByEvidenceId String?
+  createdAt              DateTime        @default(now())
   archivedAt             DateTime?
-  archivedById           String?   @db.Uuid
-  archivedBy             Profile?  @relation("EvidenceArchivedBy", fields: [archivedById], references: [id])
+  createdBySystem        String          @default("system")
+  updatedAt              DateTime        @default(now())
+  archivedById           String?         @db.Uuid
+  createdById            String?         @db.Uuid
+  updatedById            String?         @db.Uuid
+  decisionBases          DecisionBasis[]
+  archivedBy             Profile?        @relation("EvidenceArchivedBy", fields: [archivedById], references: [id])
+  createdBy              Profile?        @relation("EvidenceCreatedBy", fields: [createdById], references: [id])
+  updatedBy              Profile?        @relation("EvidenceUpdatedBy", fields: [updatedById], references: [id])
+  evidenceLinks          EvidenceLink[]
 
-  createdBySystem String   @default("system")
-  createdById     String?  @db.Uuid
-  createdBy       Profile? @relation("EvidenceCreatedBy", fields: [createdById], references: [id])
-  updatedById     String?  @db.Uuid
-  updatedBy       Profile? @relation("EvidenceUpdatedBy", fields: [updatedById], references: [id])
-
-  decisionBases DecisionBasis[]
-  evidenceLinks EvidenceLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  @@schema("public")
 }
 
-// ----------------------
-// EVIDENCE LINK
-// ----------------------
 model EvidenceLink {
   id         String   @id @default(uuid())
   evidenceId String
@@ -337,13 +294,11 @@ model EvidenceLink {
   linkedBy   String   @default("SYSTEM")
   notes      String?
   createdAt  DateTime @default(now())
+  evidence   Evidence @relation(fields: [evidenceId], references: [id])
 
-  evidence Evidence @relation(fields: [evidenceId], references: [id])
+  @@schema("public")
 }
 
-// ----------------------
-// PHYTOSANITARY CERTIFICATE
-// ----------------------
 model PhytosanitaryCertificate {
   id                     String           @id @default(uuid())
   issuingCountry         String
@@ -364,25 +319,21 @@ model PhytosanitaryCertificate {
   consignmentId          String?
   reusedForReferenceOnly Boolean          @default(false)
   statusFlags            Json?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @default(now())
   archivedAt             DateTime?
   archivedById           String?          @db.Uuid
+  createdById            String?          @db.Uuid
+  updatedById            String?          @db.Uuid
   archivedBy             Profile?         @relation("CertificateArchivedBy", fields: [archivedById], references: [id])
+  createdBy              Profile?         @relation("CertificateCreatedBy", fields: [createdById], references: [id])
+  exporterOrg            Organization     @relation(fields: [exporterOrgId], references: [id])
+  updatedBy              Profile?         @relation("CertificateUpdatedBy", fields: [updatedById], references: [id])
+  shipments              Shipment[]
 
-  exporterOrg Organization @relation(fields: [exporterOrgId], references: [id])
-  shipments   Shipment[]
-
-  createdById String?  @db.Uuid
-  createdBy   Profile? @relation("CertificateCreatedBy", fields: [createdById], references: [id])
-  updatedById String?  @db.Uuid
-  updatedBy   Profile? @relation("CertificateUpdatedBy", fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  @@schema("public")
 }
 
-// ----------------------
-// PPQ587 COMPLIANCE
-// ----------------------
 model PPQ587Compliance {
   seedLotId            String    @id
   eligible             Boolean
@@ -398,15 +349,13 @@ model PPQ587Compliance {
   evaluatedAt          DateTime?
   evaluatedBy          String?
   auditNotes           String?
+  seedLot              SeedLot   @relation(fields: [seedLotId], references: [id])
 
-  seedLot SeedLot @relation(fields: [seedLotId], references: [id])
+  @@schema("public")
 }
 
-// ----------------------
-// SHIPMENT
-// ----------------------
 model Shipment {
-  id                         String         @id @default(uuid())
+  id                         String                    @id @default(uuid())
   seedLotIds                 String[]
   exporterOrgId              String
   importerId                 String
@@ -431,18 +380,524 @@ model Shipment {
   clearedAt                  DateTime?
   deliveredAt                DateTime?
   auditTrail                 Json?
+  createdAt                  DateTime                  @default(now())
+  updatedAt                  DateTime                  @default(now())
   archivedAt                 DateTime?
-  archivedById               String?        @db.Uuid
-  archivedBy                 Profile?       @relation("ShipmentArchivedBy", fields: [archivedById], references: [id])
+  archivedById               String?                   @db.Uuid
+  createdById                String?                   @db.Uuid
+  updatedById                String?                   @db.Uuid
+  archivedBy                 Profile?                  @relation("ShipmentArchivedBy", fields: [archivedById], references: [id])
+  createdBy                  Profile?                  @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
+  exporterOrg                Organization              @relation(fields: [exporterOrgId], references: [id])
+  phytosanitaryCertificate   PhytosanitaryCertificate? @relation(fields: [phytosanitaryCertificateId], references: [id])
+  updatedBy                  Profile?                  @relation("ShipmentUpdatedBy", fields: [updatedById], references: [id])
 
-  exporterOrg              Organization              @relation(fields: [exporterOrgId], references: [id])
-  phytosanitaryCertificate PhytosanitaryCertificate? @relation(fields: [phytosanitaryCertificateId], references: [id])
+  @@schema("public")
+}
 
-  createdById String?  @db.Uuid
-  createdBy   Profile? @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
-  updatedById String?  @db.Uuid
-  updatedBy   Profile? @relation("ShipmentUpdatedBy", fields: [updatedById], references: [id])
+model Waitlist {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  name       String?
+  company    String?
+  role       String?
+  interest   String?
+  importance Int      @default(1)
+  source     String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model audit_log_entries {
+  instance_id String?   @db.Uuid
+  id          String    @id @db.Uuid
+  payload     Json?     @db.Json
+  created_at  DateTime? @db.Timestamptz(6)
+  ip_address  String    @default("") @db.VarChar(64)
+
+  @@index([instance_id], map: "audit_logs_instance_id_idx")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model flow_state {
+  id                     String                @id @db.Uuid
+  user_id                String?               @db.Uuid
+  auth_code              String
+  code_challenge_method  code_challenge_method
+  code_challenge         String
+  provider_type          String
+  provider_access_token  String?
+  provider_refresh_token String?
+  created_at             DateTime?             @db.Timestamptz(6)
+  updated_at             DateTime?             @db.Timestamptz(6)
+  authentication_method  String
+  auth_code_issued_at    DateTime?             @db.Timestamptz(6)
+  saml_relay_states      saml_relay_states[]
+
+  @@index([created_at(sort: Desc)])
+  @@index([auth_code], map: "idx_auth_code")
+  @@index([user_id, authentication_method], map: "idx_user_id_auth_method")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model identities {
+  provider_id     String
+  user_id         String    @db.Uuid
+  identity_data   Json
+  provider        String
+  last_sign_in_at DateTime? @db.Timestamptz(6)
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  email           String?   @default(dbgenerated("lower((identity_data ->> 'email'::text))"))
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  users           User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider_id, provider], map: "identities_provider_id_provider_unique")
+  @@index([email])
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model instances {
+  id              String    @id @db.Uuid
+  uuid            String?   @db.Uuid
+  raw_base_config String?
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_amr_claims {
+  session_id            String   @db.Uuid
+  created_at            DateTime @db.Timestamptz(6)
+  updated_at            DateTime @db.Timestamptz(6)
+  authentication_method String
+  id                    String   @id(map: "amr_id_pk") @db.Uuid
+  sessions              sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([session_id, authentication_method], map: "mfa_amr_claims_session_id_authentication_method_pkey")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_challenges {
+  id                     String      @id @db.Uuid
+  factor_id              String      @db.Uuid
+  created_at             DateTime    @db.Timestamptz(6)
+  verified_at            DateTime?   @db.Timestamptz(6)
+  ip_address             String      @db.Inet
+  otp_code               String?
+  web_authn_session_data Json?
+  mfa_factors            mfa_factors @relation(fields: [factor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "mfa_challenges_auth_factor_id_fkey")
+
+  @@index([created_at(sort: Desc)], map: "mfa_challenge_created_at_idx")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_factors {
+  id                           String           @id @db.Uuid
+  user_id                      String           @db.Uuid
+  friendly_name                String?
+  factor_type                  factor_type
+  status                       factor_status
+  created_at                   DateTime         @db.Timestamptz(6)
+  updated_at                   DateTime         @db.Timestamptz(6)
+  secret                       String?
+  phone                        String?
+  last_challenged_at           DateTime?        @unique @db.Timestamptz(6)
+  web_authn_credential         Json?
+  web_authn_aaguid             String?          @db.Uuid
+  last_webauthn_challenge_data Json?
+  mfa_challenges               mfa_challenges[]
+  users                        User             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, phone], map: "unique_phone_factor_per_user")
+  @@index([user_id, created_at], map: "factor_id_created_at_idx")
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_authorizations {
+  id                    String                     @id @db.Uuid
+  authorization_id      String                     @unique
+  client_id             String                     @db.Uuid
+  user_id               String?                    @db.Uuid
+  redirect_uri          String
+  scope                 String
+  state                 String?
+  resource              String?
+  code_challenge        String?
+  code_challenge_method code_challenge_method?
+  response_type         oauth_response_type        @default(code)
+  status                oauth_authorization_status @default(pending)
+  authorization_code    String?                    @unique
+  created_at            DateTime                   @default(now()) @db.Timestamptz(6)
+  expires_at            DateTime                   @default(dbgenerated("(now() + '00:03:00'::interval)")) @db.Timestamptz(6)
+  approved_at           DateTime?                  @db.Timestamptz(6)
+  nonce                 String?
+  oauth_clients         oauth_clients              @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                 User?                      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model oauth_client_states {
+  id            String   @id @db.Uuid
+  provider_type String
+  code_verifier String?
+  created_at    DateTime @db.Timestamptz(6)
+
+  @@index([created_at], map: "idx_oauth_client_states_created_at")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_clients {
+  id                   String                  @id @db.Uuid
+  client_secret_hash   String?
+  registration_type    oauth_registration_type
+  redirect_uris        String
+  grant_types          String
+  client_name          String?
+  client_uri           String?
+  logo_uri             String?
+  created_at           DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at           DateTime?               @db.Timestamptz(6)
+  client_type          oauth_client_type       @default(confidential)
+  oauth_authorizations oauth_authorizations[]
+  oauth_consents       oauth_consents[]
+  sessions             sessions[]
+
+  @@index([deleted_at])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_consents {
+  id            String        @id @db.Uuid
+  user_id       String        @db.Uuid
+  client_id     String        @db.Uuid
+  scopes        String
+  granted_at    DateTime      @default(now()) @db.Timestamptz(6)
+  revoked_at    DateTime?     @db.Timestamptz(6)
+  oauth_clients oauth_clients @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         User          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, client_id], map: "oauth_consents_user_client_unique")
+  @@index([user_id, granted_at(sort: Desc)], map: "oauth_consents_user_order_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model one_time_tokens {
+  id         String              @id @db.Uuid
+  user_id    String              @db.Uuid
+  token_type one_time_token_type
+  token_hash String
+  relates_to String
+  created_at DateTime            @default(now()) @db.Timestamp(6)
+  updated_at DateTime            @default(now()) @db.Timestamp(6)
+  users      User                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, token_type])
+  @@index([relates_to], map: "one_time_tokens_relates_to_hash_idx", type: Hash)
+  @@index([token_hash], map: "one_time_tokens_token_hash_hash_idx", type: Hash)
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model refresh_tokens {
+  instance_id String?   @db.Uuid
+  id          BigInt    @id @default(autoincrement())
+  token       String?   @unique(map: "refresh_tokens_token_unique") @db.VarChar(255)
+  user_id     String?   @db.VarChar(255)
+  revoked     Boolean?
+  created_at  DateTime? @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+  parent      String?   @db.VarChar(255)
+  session_id  String?   @db.Uuid
+  sessions    sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([instance_id])
+  @@index([instance_id, user_id])
+  @@index([parent])
+  @@index([session_id, revoked])
+  @@index([updated_at(sort: Desc)])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model saml_providers {
+  id                String        @id @db.Uuid
+  sso_provider_id   String        @db.Uuid
+  entity_id         String        @unique
+  metadata_xml      String
+  metadata_url      String?
+  attribute_mapping Json?
+  created_at        DateTime?     @db.Timestamptz(6)
+  updated_at        DateTime?     @db.Timestamptz(6)
+  name_id_format    String?
+  sso_providers     sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model saml_relay_states {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  request_id      String
+  for_email       String?
+  redirect_to     String?
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  flow_state_id   String?       @db.Uuid
+  flow_state      flow_state?   @relation(fields: [flow_state_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)])
+  @@index([for_email])
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model schema_migrations {
+  version String @id @db.VarChar(255)
+
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model sessions {
+  id                     String           @id @db.Uuid
+  user_id                String           @db.Uuid
+  created_at             DateTime?        @db.Timestamptz(6)
+  updated_at             DateTime?        @db.Timestamptz(6)
+  factor_id              String?          @db.Uuid
+  aal                    aal_level?
+  not_after              DateTime?        @db.Timestamptz(6)
+  refreshed_at           DateTime?        @db.Timestamp(6)
+  user_agent             String?
+  ip                     String?          @db.Inet
+  tag                    String?
+  oauth_client_id        String?          @db.Uuid
+  refresh_token_hmac_key String?
+  refresh_token_counter  BigInt?
+  scopes                 String?
+  mfa_amr_claims         mfa_amr_claims[]
+  refresh_tokens         refresh_tokens[]
+  oauth_clients          oauth_clients?   @relation(fields: [oauth_client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                  User             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([not_after(sort: Desc)])
+  @@index([oauth_client_id])
+  @@index([user_id])
+  @@index([user_id, created_at], map: "user_id_created_at_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model sso_domains {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  domain          String
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model sso_providers {
+  id                String              @id @db.Uuid
+  resource_id       String?
+  created_at        DateTime?           @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  disabled          Boolean?
+  saml_providers    saml_providers[]
+  saml_relay_states saml_relay_states[]
+  sso_domains       sso_domains[]
+
+  @@index([resource_id], map: "sso_providers_resource_id_pattern_idx")
+  @@schema("auth")
+}
+
+/// ----------------------
+/// ENUMS
+/// ----------------------
+enum RegulatoryPath {
+  PPQ_587_SMALL_LOT
+  PHYTOSANITARY_REQUIRED
+  BULK_IMPORT_DOMESTIC_FULFILLMENT
+  EXPORT_PROHIBITED
+
+  @@schema("public")
+}
+
+enum RiskClass {
+  LOW
+  MEDIUM
+  HIGH
+  UNKNOWN
+
+  @@schema("public")
+}
+
+enum SeedUse {
+  HOBBY
+  RESEARCH
+  COMMERCIAL
+
+  @@schema("public")
+}
+
+enum PedigreeStatus {
+  NON_PEDIGREED
+  CERTIFIED
+  UNKNOWN
+
+  @@schema("public")
+}
+
+enum InspectionStatus {
+  PENDING
+  PASSED
+  FAILED
+  CONDITIONAL
+
+  @@schema("public")
+}
+
+enum SeedLotSubmissionStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+
+  @@schema("public")
+}
+
+enum RegulatoryAssessmentStatus {
+  PENDING
+  COMPLETED
+
+  @@schema("public")
+}
+
+enum UserRole {
+  EXPORTER
+  SUPPLIER
+  INSPECTOR
+  INTERNAL
+  IMPORTER
+
+  @@schema("public")
+}
+
+enum aal_level {
+  aal1
+  aal2
+  aal3
+
+  @@schema("auth")
+}
+
+enum code_challenge_method {
+  s256
+  plain
+
+  @@schema("auth")
+}
+
+enum factor_status {
+  unverified
+  verified
+
+  @@schema("auth")
+}
+
+enum factor_type {
+  totp
+  webauthn
+  phone
+
+  @@schema("auth")
+}
+
+enum oauth_authorization_status {
+  pending
+  approved
+  denied
+  expired
+
+  @@schema("auth")
+}
+
+enum oauth_client_type {
+  public
+  confidential
+
+  @@schema("auth")
+}
+
+enum oauth_registration_type {
+  dynamic
+  manual
+
+  @@schema("auth")
+}
+
+enum oauth_response_type {
+  code
+
+  @@schema("auth")
+}
+
+enum one_time_token_type {
+  confirmation_token
+  reauthentication_token
+  recovery_token
+  email_change_token_new
+  email_change_token_current
+  phone_change_token
+
+  @@schema("auth")
 }

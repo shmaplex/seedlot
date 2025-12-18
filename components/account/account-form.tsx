@@ -7,7 +7,7 @@ import {
   getProfile,
   updatePassword,
   updateProfile as updateProfileAction,
-} from "@/app/auth/actions";
+} from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,

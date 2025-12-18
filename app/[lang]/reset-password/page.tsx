@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { updatePassword } from "@/app/auth/actions";
+import { updatePassword } from "@/app/actions/auth";
 import NotLoggedIn from "@/components/account/not-logged-in";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export default function ChangePasswordForm() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 dark:bg-black px-4">
       <div className="mb-8">
         <Image
-          src="/logo-alt.webp"
+          src="/png/seedlot-logo@2x.png" // Seedlot logo
           alt="Seedlot logo"
           width={250}
           height={50}

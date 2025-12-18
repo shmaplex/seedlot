@@ -23,11 +23,11 @@ export function UserButton() {
   useEffect(() => {
     if (!user) return;
 
-    const nameFallback = user.fullName || user.email || "User";
+    const nameFallback = user?.user_metadata?.fullName || user.email || "User";
     setFallbackName(nameFallback);
 
     const dicebearUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.id}`;
-    setAvatarSrc(user.avatarUrl || dicebearUrl);
+    setAvatarSrc(user?.user_metadata?.avatarUrl || dicebearUrl);
   }, [user]);
 
   const handleSignOut = () => {

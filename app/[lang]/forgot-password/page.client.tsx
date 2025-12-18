@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { sendPasswordReset } from "@/app/auth/actions";
+import { sendPasswordReset } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -52,7 +52,7 @@ export default function ForgotPasswordPage({
       {/* Logo */}
       <div className="mb-8">
         <Image
-          src="/logo-alt.webp" // Seedlot logo
+          src="/png/seedlot-logo@2x.png" // Seedlot logo
           alt="Seedlot logo"
           width={250}
           height={50}

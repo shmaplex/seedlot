@@ -1,0 +1,13 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+
+export async function updatePassword(newPassword: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  return { success: !error, error: error?.code };
+}
