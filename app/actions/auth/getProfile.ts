@@ -1,12 +1,17 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { UserProfile } from "@/schemas/profile.schema";
+import {
+  type ProfileDetailed,
+  ProfileDetailedSchema,
+} from "@/schemas/profile.schema";
 
 /**
- * Fetch a user's profile by ID
+ * Fetch a user's profile by ID and validate with Zod
  */
-export async function getProfile(userId: string): Promise<UserProfile | null> {
+export async function getProfile(
+  userId: string,
+): Promise<ProfileDetailed | null> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -20,5 +25,12 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
     return null;
   }
 
-  return data as UserProfile;
+  // Validate the returned data against the Zod schema
+  const parseResult = ProfileDetailedSchema.safeParse(data);
+  if (!parseResult.success) {
+    console.error("Profile validation failed:", parseResult.error.format());
+    return null;
+  }
+
+  return parseResult.data;
 }

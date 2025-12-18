@@ -220,3 +220,42 @@ export const DateTimeDefault = z.iso
  * Prisma mapping: `Boolean`
  */
 export const BooleanFlag = z.boolean().describe("BooleanFlag");
+
+/* ------------------------------------------------------------------ */
+/* NUMERIC & FINANCIAL                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Decimal
+ *
+ * Represents fixed-precision decimal values for regulatory or financial data.
+ *
+ * Prisma mapping: `Decimal`
+ */
+export const Decimal = z.number().describe("Decimal");
+
+/* ------------------------------------------------------------------ */
+/* WEB / URL / RESOURCE LINKS                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * URLString
+ *
+ * Valid URL for reference documents, online resources, or media.
+ *
+ * Prisma mapping: `String @db.VarChar(2048)`
+ */
+export const URLString = z.string().url().max(2048).describe("URLString");
+
+/* ------------------------------------------------------------------ */
+/* JSON / FLEXIBLE DATA                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * JSONData
+ *
+ * Arbitrary JSON object for flexible metadata storage.
+ *
+ * Prisma mapping: `Json`
+ */
+export const JSONData = z.any().describe("JSONData");

@@ -1,17 +1,18 @@
-// app/[lang]/account/page.client.tsx
 "use client";
 
 import type { User } from "@supabase/supabase-js";
 import AccountForm from "@/components/account/account-form";
-import type { UserProfile } from "@/schemas/profile.schema";
+import type { ProfileBase } from "@/schemas/profile.schema";
+
+type AccountPageClientProps = {
+  initialUser: User | null;
+  initialUserProfile: ProfileBase | null;
+};
 
 export default function AccountPageClient({
   initialUser,
   initialUserProfile,
-}: {
-  initialUser: User | null;
-  initialUserProfile: UserProfile | null;
-}) {
+}: AccountPageClientProps) {
   return (
     <div className="px-4">
       <AccountForm user={initialUser} profile={initialUserProfile} />

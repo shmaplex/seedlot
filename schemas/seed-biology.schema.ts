@@ -1,3 +1,4 @@
+// schemas/seed-biology.schema.ts
 import { z } from "zod";
 import { RiskClass } from "./enums";
 import {
@@ -9,97 +10,50 @@ import {
 } from "./primitives";
 
 /**
- * SeedBiologySchema
- *
- * Describes the biological identity and known risk characteristics
- * of a seed lot.
- *
- * IMPORTANT:
- * - This schema does NOT assert pest freedom
- * - It captures declared biology and known associations
- * - Regulatory determinations must be made separately
- *
- * Used by:
- * - Regulatory assessments
- * - Risk scoring engines
- * - Inspection workflows
+ * Base schema — core SeedBiology fields
  */
-export const SeedBiologySchema = z.object({
-  /**
-   * System-assigned unique identifier.
-   * Never supplied by external partners.
-   */
-  id: SafeIdentifier.optional(),
-
-  /**
-   * Botanical scientific name as declared by supplier or catalog
-   * (free-text, regulator-facing)
-   */
+export const SeedBiologyBaseSchema = z.object({
+  id: SafeIdentifier,
   scientificName: ScientificName,
-
-  /**
-   * Common or trade name (if applicable)
-   * Example: "Tomato", "Bell Pepper"
-   */
   commonName: SafeCode.optional(),
-
-  /**
-   * Botanical family
-   * Example: "Solanaceae"
-   */
   family: SafeCode.optional(),
-
-  /**
-   * Botanical genus
-   * Example: "Solanum"
-   */
   genus: SafeCode.optional(),
-
-  /**
-   * Whether the species is known to have seed-borne transmission
-   * risks for regulated pests or pathogens.
-   *
-   * This is NOT a declaration of presence.
-   */
   seedBorneRiskKnown: BooleanFlag.optional(),
-
-  /**
-   * Known or historically associated seed-borne pathogens
-   * for this taxon.
-   *
-   * Examples:
-   * - Tomato brown rugose fruit virus (ToBRFV)
-   * - Pepino mosaic virus (PepMV)
-   *
-   * Presence is NOT implied.
-   */
-  knownPathogens: z.array(SafeCode).optional(),
-
-  /**
-   * Whether this species is commonly regulated or restricted
-   * in international trade (by destination NPPOs).
-   */
+  knownPathogens: z.array(z.string()).optional(),
   commonlyRegulated: BooleanFlag.optional(),
-
-  /**
-   * High-level biological risk classification
-   * (used as an input to regulatory assessment, not a final verdict)
-   */
   biologicalRiskClass: RiskClass.optional(),
-
-  /**
-   * Whether this is a hybrid or open-pollinated plant
-   * (relevant for pedigree declarations, not eligibility)
-   */
-  breedingType: z.enum(["OPEN_POLLINATED", "HYBRID", "UNKNOWN"]).optional(),
-
-  /**
-   * Additional biological notes supplied by:
-   * - Seed producer
-   * - Inspector
-   * - Compliance officer
-   *
-   * Stored verbatim for audit purposes.
-   */
+  breedingType: z.string().optional(),
   biologyNotes: LongText.optional(),
 });
+
+/**
+ * Reference schema — minimal info for embedding elsewhere
+ */
+export const SeedBiologyReferenceSchema = SeedBiologyBaseSchema.pick({
+  id: true,
+  scientificName: true,
+  commonName: true,
+  biologyNotes: true,
+});
+
+/**
+ * Create schema — for new SeedBiology submissions
+ */
+export const SeedBiologyCreateSchema = SeedBiologyBaseSchema.omit({ id: true });
+
+/**
+ * Update schema — partial updates allowed
+ */
+export const SeedBiologyUpdateSchema = SeedBiologyCreateSchema.partial();
+
+/**
+ * Detailed schema — internal/admin view with all fields
+ */
+export const SeedBiologyDetailedSchema = SeedBiologyBaseSchema.extend({});
+
+/** TypeScript types derived from Zod schemas */
+export type SeedBiologyBase = z.infer<typeof SeedBiologyBaseSchema>;
+export type SeedBiologyReference = z.infer<typeof SeedBiologyReferenceSchema>;
+export type SeedBiologyCreate = z.infer<typeof SeedBiologyCreateSchema>;
+export type SeedBiologyUpdate = z.infer<typeof SeedBiologyUpdateSchema>;
+export type SeedBiologyDetailed = z.infer<typeof SeedBiologyDetailedSchema>;

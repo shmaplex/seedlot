@@ -1,0 +1,83 @@
+{
+  "title": "종자 배치",
+  "description": "종자 배치를 제출하고 관리하는 폼",
+  "fields": {
+    "lotCode": {
+      "label": "배치 코드",
+      "placeholder": "배치 코드를 입력하세요"
+    },
+    "originCountry": {
+      "label": "원산지 국가",
+      "placeholder": "예: KR"
+    },
+    "seedUse": {
+      "label": "종자 사용 용도",
+      "options": {
+        "HOBBY": "취미용",
+        "COMMERCIAL": "상업용"
+      }
+    },
+    "pedigreeStatus": {
+      "label": "혈통 상태",
+      "options": {
+        "NON_PEDIGREED": "혈통 없음",
+        "PEDIGREED": "혈통 있음"
+      }
+    },
+    "quantityAvailable": {
+      "label": "사용 가능 수량",
+      "placeholder": "예: 1000"
+    },
+    "harvestYear": {
+      "label": "수확 연도",
+      "placeholder": "예: 2025"
+    },
+    "storageConditions": {
+      "label": "보관 조건",
+      "placeholder": "예: 건조, 20°C"
+    },
+    "biology": {
+      "scientificName": {
+        "label": "학명",
+        "placeholder": "Solanum lycopersicum"
+      },
+      "commonName": {
+        "label": "일반명",
+        "placeholder": "토마토"
+      },
+      "family": {
+        "label": "과",
+        "placeholder": "가지과"
+      },
+      "genus": {
+        "label": "속",
+        "placeholder": "가지속"
+      },
+      "seedBorneRiskKnown": {
+        "label": "종자 매개 위험 여부"
+      },
+      "knownPathogens": {
+        "label": "알려진 병원체"
+      },
+      "commonlyRegulated": {
+        "label": "규제가 일반적인 종"
+      },
+      "biologicalRiskClass": {
+        "label": "생물학적 위험 등급"
+      },
+      "breedingType": {
+        "label": "육종 유형"
+      },
+      "biologyNotes": {
+        "label": "생물학적 참고 사항",
+        "placeholder": "종자 생물학에 대한 선택적 메모"
+      }
+    }
+  },
+  "status": {
+    "PENDING": "제출 대기",
+    "APPROVED": "승인됨",
+    "REJECTED": "거부됨",
+    "ARCHIVED": "보관됨"
+  }
+}

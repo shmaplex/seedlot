@@ -1,10 +1,12 @@
-// app/(dashboard)/layout.client.tsx
 "use client";
+
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Providers } from "@/app/providers";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { UserModeSwitcher } from "@/components/ui/user-mode-switcher";
 import { navConfig } from "@/data/nav";
 import type { UserRole } from "@/schemas/enums";
 
@@ -21,9 +23,14 @@ export default function DashboardClientLayout({
 }: DashboardClientLayoutProps) {
   const pathname = usePathname();
 
-  const nav = navConfig[role.toLowerCase() as keyof typeof navConfig];
+  // Mode state based on URL or default role
+  const initialMode =
+    pathname.split("/")[3]?.toLowerCase() || role.toLowerCase();
+  const [mode, setMode] = useState(initialMode);
 
-  // prepend lang to all URLs
+  // Update nav whenever mode changes
+  const nav = navConfig[mode as keyof typeof navConfig];
+
   const prefixLang = (url: string) => `/${lang}${url}`;
 
   const allNavItems = [
@@ -34,6 +41,12 @@ export default function DashboardClientLayout({
 
   const currentTitle =
     allNavItems.find((item) => item.url === pathname)?.title ?? "Dashboard";
+
+  // Keep mode in sync if URL changes externally
+  useEffect(() => {
+    const urlMode = pathname.split("/")[3]?.toLowerCase();
+    if (urlMode && urlMode !== mode) setMode(urlMode);
+  }, [mode, pathname]);
 
   return (
     <Providers>
@@ -61,7 +74,11 @@ export default function DashboardClientLayout({
           }}
         />
         <SidebarInset>
-          <SiteHeader title={currentTitle} />
+          <SiteHeader
+            title={currentTitle} // just the string
+            currentLang={lang}
+            showModeSwitcher={true} // optional, default is true
+          />
           <main className="flex flex-1 flex-col overflow-auto">
             <div className="@container/main flex flex-1 flex-col gap-2">
               <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

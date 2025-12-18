@@ -811,6 +811,7 @@ enum SeedLotSubmissionStatus {
   PENDING
   VALIDATED
   REJECTED
+  APPROVED
 
   @@schema("public")
 }

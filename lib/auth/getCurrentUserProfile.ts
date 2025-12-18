@@ -1,6 +1,6 @@
 // lib/auth/getCurrentUserProfile.ts
 import { createClient } from "@/lib/supabase/server";
-import { ProfileSchema } from "@/schemas/profile.schema";
+import { ProfileBaseSchema } from "@/schemas/profile.schema";
 
 export async function getCurrentUserProfile() {
   const supabase = await createClient();
@@ -19,5 +19,5 @@ export async function getCurrentUserProfile() {
 
   if (error || !data) return null;
 
-  return ProfileSchema.parse(data);
+  return ProfileBaseSchema.parse(data);
 }

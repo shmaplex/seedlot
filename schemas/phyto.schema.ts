@@ -2,155 +2,89 @@ import { z } from "zod";
 import { InspectionStatus } from "./enums";
 import {
   BooleanFlag,
-  CountryCode,
   DateTimeDefault,
   LongText,
-  SafeCode,
   SafeIdentifier,
 } from "./primitives";
 
 /**
- * PhytosanitaryCertificateSchema
- *
- * Represents an official phytosanitary certificate issued by a
- * National Plant Protection Organization (NPPO) under IPPC / ISPM-12.
- *
- * IMPORTANT LEGAL NOTES:
- * - A phytosanitary certificate applies to ONE shipment (consignment).
- * - It may list multiple seed lots ONLY if inspected and shipped together.
- * - Certificates CANNOT be copied or reused for separate shipments.
- * - Reuse flags here indicate internal reference linkage ONLY.
- *
- * This schema is designed to:
- * - Support USDA APHIS PPQ imports
- * - Support EU import inspections
- * - Support KR NPPO exports
- * - Maintain audit-safe traceability
+ * Base schema — core Phytosanitary Certificate fields
  */
-export const PhytosanitaryCertificateSchema = z.object({
+export const PhytosanitaryCertificateBaseSchema = z.object({
   /** System-assigned identifier */
   id: SafeIdentifier.optional(),
 
   /**
    * Issuing country (ISO-3166)
-   * Example: "KR"
+   * Default: "KR"
    */
-  issuingCountry: CountryCode.default("KR"),
+  issuingCountry: z.string().default("KR"),
 
   /**
    * NPPO authority name
    * Example: "Animal and Plant Quarantine Agency (APQA)"
    */
-  issuingAuthority: SafeCode,
+  issuingAuthority: z.string(),
 
   /**
    * Official certificate number as issued by NPPO
    * Must be globally unique per authority
    */
-  certificateNumber: SafeCode,
+  certificateNumber: z.string(),
 
-  /**
-   * Exporter organization ID
-   * Must match registered NPPO exporter
-   */
+  /** Exporter organization ID */
   exporterOrgId: SafeIdentifier,
 
-  /**
-   * Importing country (destination NPPO)
-   * Example: "US", "CA", "FR", "DE"
-   */
-  destinationCountry: CountryCode,
+  /** Importing country (destination NPPO) */
+  destinationCountry: z.string(),
 
-  /**
-   * Import permit or authorization reference (if required)
-   * - USDA APHIS permit number
-   * - EU import authorization
-   */
-  importPermitReference: SafeCode.optional(),
+  /** Import permit or authorization reference (if required) */
+  importPermitReference: z.string().optional(),
 
-  /**
-   * Seed lots included on this certificate.
-   *
-   * RULE:
-   * - All seed lots MUST be inspected together
-   * - All seed lots MUST ship together in one consignment
-   */
-  seedLotIds: z.array(SafeIdentifier).min(1),
+  /** Seed lot IDs included on this certificate */
+  seedLotIds: z.array(z.string()).min(1),
 
-  /**
-   * Inspection date performed by NPPO
-   */
-  inspectionDate: z.date().describe("DateTime"),
+  /** Inspection date performed by NPPO */
+  inspectionDate: z.date(),
 
-  /**
-   * Inspection result
-   */
+  /** Inspection result */
   inspectionStatus: InspectionStatus,
 
-  /**
-   * Name or identifier of inspecting officer (if provided)
-   */
+  /** Name or identifier of inspecting officer (optional) */
   inspectorId: SafeIdentifier.optional(),
 
-  /**
-   * Official inspection remarks
-   * (may include pest freedom statements or treatments)
-   */
+  /** Official inspection remarks */
   inspectorNotes: LongText.optional(),
 
-  /**
-   * Additional declarations required by importing country
-   * (ISPM-12 Section: Additional Declaration)
-   *
-   * Example:
-   * "The seeds were found free from Tomato brown rugose fruit virus."
-   */
+  /** Additional declarations required by importing country */
   additionalDeclarations: z.array(LongText).optional(),
 
-  /**
-   * Treatments applied (if any)
-   * Example: fumigation, heat treatment
-   */
+  /** Treatments applied (if any) */
   treatmentsApplied: z
     .array(
       z.object({
-        treatmentType: SafeCode,
-        chemical: SafeCode.optional(),
-        duration: SafeCode.optional(),
-        temperature: SafeCode.optional(),
-        concentration: SafeCode.optional(),
+        treatmentType: z.string(),
+        chemical: z.string().optional(),
+        duration: z.string().optional(),
+        temperature: z.string().optional(),
+        concentration: z.string().optional(),
       }),
     )
     .optional(),
 
-  /**
-   * Certificate issue date
-   * Often same as inspection date, but not always
-   */
-  issueDate: z.date().describe("DateTime"),
+  /** Certificate issue date */
+  issueDate: z.date(),
 
-  /**
-   * Certificate validity end date (if explicitly defined)
-   * Note: many countries rely on shipment date instead
-   */
-  validUntil: z.date().optional().describe("DateTime"),
+  /** Certificate validity end date (if explicitly defined) */
+  validUntil: z.date().optional(),
 
-  /**
-   * Shipment / consignment identifier this certificate is bound to
-   */
+  /** Shipment / consignment identifier this certificate is bound to */
   consignmentId: SafeIdentifier.optional(),
 
-  /**
-   * INTERNAL USE ONLY
-   *
-   * Indicates this certificate is referenced by multiple internal
-   * records (e.g. audit, analytics), NOT reused legally.
-   */
+  /** INTERNAL USE ONLY: Indicates this certificate is referenced internally */
   reusedForReferenceOnly: BooleanFlag.default(false),
 
-  /**
-   * Whether this certificate was superseded, voided, or cancelled
-   */
+  /** Certificate status flags */
   statusFlags: z
     .object({
       voided: BooleanFlag.optional(),
@@ -159,16 +93,60 @@ export const PhytosanitaryCertificateSchema = z.object({
     })
     .optional(),
 
+  /** Timestamps */
   createdAt: DateTimeDefault,
   updatedAt: DateTimeDefault,
+  archivedAt: z.date().optional(),
+  archivedById: SafeIdentifier.optional(),
+  createdById: SafeIdentifier.optional(),
+  updatedById: SafeIdentifier.optional(),
 });
 
+/**
+ * Reference schema — minimal info for embedding elsewhere
+ */
+export const PhytosanitaryCertificateReferenceSchema =
+  PhytosanitaryCertificateBaseSchema.pick({
+    id: true,
+    certificateNumber: true,
+    issuingAuthority: true,
+    issuingCountry: true,
+    inspectionStatus: true,
+  });
+
+/** Schema for creating a new certificate. System-managed fields omitted. */
 export const PhytosanitaryCertificateCreateSchema =
-  PhytosanitaryCertificateSchema.omit({
+  PhytosanitaryCertificateBaseSchema.omit({
     id: true,
     createdAt: true,
     updatedAt: true,
+    archivedAt: true,
+    archivedById: true,
+    createdById: true,
+    updatedById: true,
   });
 
+/** Schema for updating an existing certificate. Partial updates allowed. */
 export const PhytosanitaryCertificateUpdateSchema =
-  PhytosanitaryCertificateCreateSchema.partial();
+  PhytosanitaryCertificateBaseSchema.partial();
+
+/** Detailed schema — internal/admin view with all fields */
+export const PhytosanitaryCertificateDetailedSchema =
+  PhytosanitaryCertificateBaseSchema.extend({});
+
+/** TypeScript types derived from Zod schemas */
+export type PhytosanitaryCertificateBase = z.infer<
+  typeof PhytosanitaryCertificateBaseSchema
+>;
+export type PhytosanitaryCertificateReference = z.infer<
+  typeof PhytosanitaryCertificateReferenceSchema
+>;
+export type PhytosanitaryCertificateCreate = z.infer<
+  typeof PhytosanitaryCertificateCreateSchema
+>;
+export type PhytosanitaryCertificateUpdate = z.infer<
+  typeof PhytosanitaryCertificateUpdateSchema
+>;
+export type PhytosanitaryCertificateDetailed = z.infer<
+  typeof PhytosanitaryCertificateDetailedSchema
+>;

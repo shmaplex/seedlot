@@ -1,5 +1,5 @@
 import {
-  // IconBuildingSkyscraper,
+  IconBuildingSkyscraper,
   IconChartBar,
   IconClipboardList,
   IconCreditCard,
@@ -7,12 +7,8 @@ import {
   IconDatabase,
   IconFileInvoice,
   IconHelp,
-  // IconKey,
-  // IconLock,
   IconReport,
   IconSettings,
-  // IconTerminal2,
-  // IconUsers,
 } from "@tabler/icons-react";
 
 type NavItem = {
@@ -53,6 +49,16 @@ export const navConfig: Record<
         url: "/dashboard/validation",
         icon: IconFileInvoice,
         description: "Inspect and validate seed lots.",
+      },
+      {
+        title: "Organizations & Suppliers",
+        url: "/dashboard/orgs",
+        icon: IconBuildingSkyscraper,
+        description: "Manage organizations and suppliers.",
+        items: [
+          { title: "Organizations", url: "/dashboard/orgs" },
+          { title: "Suppliers", url: "/dashboard/suppliers" },
+        ],
       },
     ],
     secondary: [
@@ -118,6 +124,16 @@ export const navConfig: Record<
         icon: IconClipboardList,
       },
       { title: "Reports", url: "/dashboard/reports", icon: IconReport },
+      {
+        title: "Organizations & Suppliers",
+        url: "/dashboard/orgs",
+        icon: IconBuildingSkyscraper,
+        description: "Manage organizations and suppliers.",
+        items: [
+          { title: "Organizations", url: "/dashboard/orgs" },
+          { title: "Suppliers", url: "/dashboard/suppliers" },
+        ],
+      },
     ],
     secondary: [
       { title: "Settings", url: "/dashboard/settings", icon: IconSettings },

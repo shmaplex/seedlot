@@ -1,0 +1,83 @@
+{
+  "title": "Seed Lot",
+  "description": "Form for submitting and managing seed lots",
+  "fields": {
+    "lotCode": {
+      "label": "Lot Code",
+      "placeholder": "Enter lot code"
+    },
+    "originCountry": {
+      "label": "Country of Origin",
+      "placeholder": "e.g., KR"
+    },
+    "seedUse": {
+      "label": "Seed Use",
+      "options": {
+        "HOBBY": "Hobby",
+        "COMMERCIAL": "Commercial"
+      }
+    },
+    "pedigreeStatus": {
+      "label": "Pedigree Status",
+      "options": {
+        "NON_PEDIGREED": "Non-Pedigreed",
+        "PEDIGREED": "Pedigreed"
+      }
+    },
+    "quantityAvailable": {
+      "label": "Quantity Available",
+      "placeholder": "e.g., 1000"
+    },
+    "harvestYear": {
+      "label": "Harvest Year",
+      "placeholder": "e.g., 2025"
+    },
+    "storageConditions": {
+      "label": "Storage Conditions",
+      "placeholder": "e.g., Dry, 20°C"
+    },
+    "biology": {
+      "scientificName": {
+        "label": "Scientific Name",
+        "placeholder": "Solanum lycopersicum"
+      },
+      "commonName": {
+        "label": "Common Name",
+        "placeholder": "Tomato"
+      },
+      "family": {
+        "label": "Family",
+        "placeholder": "Solanaceae"
+      },
+      "genus": {
+        "label": "Genus",
+        "placeholder": "Solanum"
+      },
+      "seedBorneRiskKnown": {
+        "label": "Seed-borne Risk Known"
+      },
+      "knownPathogens": {
+        "label": "Known Pathogens"
+      },
+      "commonlyRegulated": {
+        "label": "Commonly Regulated Species"
+      },
+      "biologicalRiskClass": {
+        "label": "Biological Risk Class"
+      },
+      "breedingType": {
+        "label": "Breeding Type"
+      },
+      "biologyNotes": {
+        "label": "Biology Notes",
+        "placeholder": "Optional notes about seed biology"
+      }
+    }
+  },
+  "status": {
+    "PENDING": "Pending Submission",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "ARCHIVED": "Archived"
+  }
+}

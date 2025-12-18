@@ -1,7 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { UserProfile } from "@/schemas/profile.schema";
+import {
+  type ProfileDetailed,
+  ProfileDetailedSchema,
+} from "@/schemas/profile.schema";
 
 /**
  * Update a user's profile fields: fullName, username, avatarUrl
@@ -11,7 +14,7 @@ export async function updateProfile(profile: {
   fullName?: string | null;
   username?: string | null;
   avatarUrl?: string | null;
-}): Promise<UserProfile | null> {
+}): Promise<ProfileDetailed | null> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -31,5 +34,15 @@ export async function updateProfile(profile: {
     return null;
   }
 
-  return data as UserProfile;
+  // Validate the returned data against the Zod schema
+  const parseResult = ProfileDetailedSchema.safeParse(data);
+  if (!parseResult.success) {
+    console.error(
+      "Updated profile validation failed:",
+      parseResult.error.format(),
+    );
+    return null;
+  }
+
+  return parseResult.data;
 }

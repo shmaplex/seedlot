@@ -12,13 +12,13 @@ import {
   useState,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { UserProfile } from "@/schemas/profile.schema";
+import type { ProfileBase } from "@/schemas/profile.schema";
 
 /** ---- Types ---- */
 
 interface UserContextValue {
   user: User | null;
-  profile: UserProfile | null;
+  profile: ProfileBase | null;
   loading: boolean;
   lang: string;
   refreshUser: () => Promise<void>;
@@ -28,7 +28,7 @@ interface UserContextValue {
 interface UserProviderProps {
   children: ReactNode;
   initialUser?: User | null;
-  initialProfile?: UserProfile | null;
+  initialProfile?: ProfileBase | null;
 }
 
 /** ---- Context ---- */
@@ -45,7 +45,7 @@ export function UserProvider({
   const supabase = useMemo(() => createClient(), []);
 
   const [user, setUser] = useState<User | null>(initialUser);
-  const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
+  const [profile, setProfile] = useState<ProfileBase | null>(initialProfile);
   const [loading, setLoading] = useState(!initialUser);
   const [lang, setLang] = useState<string>(
     initialProfile?.preferredLang ||
@@ -63,8 +63,8 @@ export function UserProvider({
         .single();
 
       if (!error && data) {
-        setProfile(data as UserProfile);
-        setLang(data.lang || "en");
+        setProfile(data as ProfileBase);
+        setLang(data.preferredLang || "en");
       } else {
         setProfile(null);
       }
@@ -88,7 +88,6 @@ export function UserProvider({
 
     setUser(data.user);
 
-    // Prefer profile lang, fallback to metadata
     setLang(
       (data.user.user_metadata?.preferred_lang as string | undefined) || "en",
     );

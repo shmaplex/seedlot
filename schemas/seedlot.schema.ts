@@ -1,5 +1,15 @@
 import { z } from "zod";
-import { PedigreeStatus, RegulatoryPath, RiskClass, SeedUse } from "./enums";
+import {
+  PEDIGREE_STATUS,
+  PedigreeStatus,
+  RegulatoryPath,
+  RISK_CLASS,
+  RiskClass,
+  SEED_LOT_SUBMISSION_STATUS,
+  SEED_USE,
+  SeedLotSubmissionStatus,
+  SeedUse,
+} from "./enums";
 import {
   BooleanFlag,
   CountryCode,
@@ -7,182 +17,125 @@ import {
   LongText,
   LotCode,
   PositiveInt,
-  SafeCode,
   SafeIdentifier,
 } from "./primitives";
-import { SeedBiologySchema } from "./seed-biology.schema";
+import { SeedBiologyReferenceSchema } from "./seed-biology.schema";
 
 /**
- * SeedLotSchema
- * ------------------------------------------------------------------
- * Canonical representation of a single traceable seed lot.
- *
- * A "seed lot" is defined as a homogeneous quantity of seeds
- * sharing the same biological identity, origin, and handling history.
- *
- * This schema is designed to satisfy and future-proof requirements from:
- * - USDA / APHIS (USA)
- * - CFIA (Canada)
- * - EU Plant Health Regulation (EU 2016/2031)
- * - IPPC / ISPM standards (incl. ISPM 12 ePhyto)
- *
- * IMPORTANT:
- * - This schema represents declared facts + assertions.
- * - Regulatory determinations are stored separately (see RegulatoryAssessment).
- * - Optionality is intentional to allow incomplete upstream supplier data.
+ * Base schema — core SeedLot fields
  */
-export const SeedLotSchema = z.object({
-  /**
-   * System-assigned unique identifier.
-   * Never supplied by external partners.
-   */
-  id: SafeIdentifier.optional(),
-
-  /**
-   * Owning organization (e.g. "shmaplex").
-   * Used for RLS enforcement and audit scope.
-   */
+export const SeedLotBaseSchema = z.object({
+  id: SafeIdentifier,
   orgId: SafeIdentifier,
-
-  /**
-   * Supplier or producer responsible for the lot.
-   * Required for traceability under all major NPPOs.
-   */
   supplierId: SafeIdentifier,
-
-  /**
-   * Supplier-provided or internal lot code.
-   * Required by APHIS, CFIA, and EU inspections for trace-back.
-   * Human- and regulator-facing, so uses SafeCode.
-   */
   lotCode: LotCode,
-
-  /**
-   * Biological identity of the seed.
-   * This is the single most important input for regulatory risk.
-   */
-  biology: SeedBiologySchema,
-
-  /**
-   * Country where the seed was produced (not shipped from).
-   * Required by:
-   * - APHIS (7 CFR §319)
-   * - CFIA D-08-04
-   * - EU Plant Health Regulation
-   */
+  biology: SeedBiologyReferenceSchema, // includes biologyNotes now
   originCountry: CountryCode.default("KR"),
-
-  /**
-   * Declared intended use of the seed.
-   * Affects eligibility under:
-   * - PPQ-587 (US)
-   * - Research exemptions (EU/US)
-   */
-  seedUse: SeedUse.default("HOBBY"),
-
-  /**
-   * Certification / pedigree status.
-   *
-   * NON_PEDIGREED does NOT mean illegal — it simply means
-   * the seed is not part of a national certification scheme.
-   *
-   * This distinction is critical for:
-   * - PPQ-587 eligibility
-   * - EU marketing directives
-   */
-  pedigreeStatus: PedigreeStatus.default("NON_PEDIGREED"),
-
-  /**
-   * Total available quantity (packets or seeds, depending on unit policy).
-   *
-   * Quantity is used to:
-   * - Validate PPQ-587 small-lot thresholds
-   * - Determine bulk vs direct shipping strategy
-   */
-  quantityAvailable: PositiveInt,
-
-  /**
-   * Year the seed was harvested or produced.
-   * Optional but strongly recommended for:
-   * - EU inspections
-   * - Viability / quality disputes
-   */
+  seedUse: SeedUse.default(SEED_USE.HOBBY),
+  pedigreeStatus: PedigreeStatus.default(PEDIGREE_STATUS.NON_PEDIGREED),
+  quantityAvailable: PositiveInt.optional(),
   harvestYear: z
     .number()
     .int()
     .min(1900)
     .max(new Date().getFullYear())
     .optional(),
-
-  /**
-   * Storage and handling conditions.
-   * Often requested during inspections if contamination is suspected.
-   * Human- and regulator-facing, so uses SafeCode.
-   */
-  storageConditions: SafeCode.optional(),
-
-  /**
-   * Internal notes not exposed to regulators or customers.
-   * May include risk flags, supplier reliability notes, etc.
-   */
+  storageConditions: z.string().optional(),
   internalNotes: LongText.optional(),
-
-  /**
-   * --- REGULATORY METADATA (NON-AUTHORITATIVE) ---
-   * These fields do NOT replace formal assessments,
-   * but allow fast routing and UI decisions.
-   */
-
-  /**
-   * Last known regulatory path for this seed lot.
-   * This is a cached value derived from rule evaluation.
-   */
+  submissionStatus: SeedLotSubmissionStatus.default(
+    SEED_LOT_SUBMISSION_STATUS.PENDING,
+  ),
   regulatoryPath: RegulatoryPath.optional(),
-
-  /**
-   * Last computed biological/regulatory risk class.
-   */
   riskClass: RiskClass.optional(),
-
-  /**
-   * Indicates whether this seed lot has known
-   * seed-borne quarantine pests or pathogens.
-   *
-   * Presence does NOT automatically prohibit export,
-   * but may require additional declarations or testing.
-   */
   knownQuarantineRisk: BooleanFlag.optional(),
-
-  /**
-   * --- AUDIT & LIFECYCLE ---
-   */
-
-  /**
-   * Timestamp when the record was created.
-   * System-managed.
-   */
   createdAt: DateTimeDefault,
-
-  /**
-   * Timestamp when the record was last modified.
-   * System-managed.
-   */
   updatedAt: DateTimeDefault,
 });
 
 /**
- * Schema for creating a new SeedLot.
- * System-managed and derived fields are excluded.
+ * Reference schema — minimal info for embedding elsewhere
  */
-export const SeedLotCreateSchema = SeedLotSchema.omit({
+export const SeedLotReferenceSchema = SeedLotBaseSchema.pick({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  lotCode: true,
+  originCountry: true,
+  seedUse: true,
+  submissionStatus: true,
 });
 
 /**
- * Schema for updating an existing SeedLot.
- * Partial updates are allowed to support incremental data intake
- * from suppliers and post-inspection corrections.
+ * Create schema — for new SeedLot submissions
+ */
+export const SeedLotCreateSchema = z.object({
+  orgId: SafeIdentifier,
+  supplierId: SafeIdentifier,
+  lotCode: LotCode,
+  biology: SeedBiologyReferenceSchema,
+  originCountry: CountryCode.default("KR").refine((val) => !!val, {
+    message: "Origin country is required",
+  }),
+  seedUse: SeedUse.default(SEED_USE.HOBBY),
+  pedigreeStatus: PedigreeStatus.default(PEDIGREE_STATUS.NON_PEDIGREED),
+  // optional fields remain optional
+  quantityAvailable: PositiveInt.optional(),
+  harvestYear: z
+    .number()
+    .int()
+    .min(1900)
+    .max(new Date().getFullYear())
+    .optional(),
+  storageConditions: z.string().optional(),
+  internalNotes: LongText.optional(),
+  submissionStatus: SeedLotSubmissionStatus.default(
+    SEED_LOT_SUBMISSION_STATUS.PENDING,
+  ),
+  regulatoryPath: RegulatoryPath.optional(),
+  riskClass: RiskClass.optional(),
+  knownQuarantineRisk: BooleanFlag.optional(),
+});
+
+/**
+ * Update schema — partial updates allowed
  */
 export const SeedLotUpdateSchema = SeedLotCreateSchema.partial();
+
+/**
+ * Detailed schema — internal/admin view with all fields
+ */
+export const SeedLotDetailedSchema = SeedLotBaseSchema.extend({
+  archivedAt: z.date().optional(),
+  archivedById: SafeIdentifier.optional(),
+  createdById: SafeIdentifier.optional(),
+  updatedById: SafeIdentifier.optional(),
+});
+
+/**
+ * Helper: create default form entry for SeedLotCreate
+ */
+export const createDefaultSeedLotEntry = (params: {
+  orgId: string;
+  supplierId: string;
+}): z.input<typeof SeedLotCreateSchema> => ({
+  orgId: params.orgId,
+  supplierId: params.supplierId,
+  lotCode: "",
+  biology: { id: "", scientificName: "", commonName: "", biologyNotes: "" },
+  originCountry: "KR",
+  seedUse: SEED_USE.HOBBY,
+  pedigreeStatus: PEDIGREE_STATUS.NON_PEDIGREED,
+  submissionStatus: SEED_LOT_SUBMISSION_STATUS.PENDING,
+  quantityAvailable: undefined,
+  harvestYear: undefined,
+  storageConditions: "",
+  internalNotes: "",
+  regulatoryPath: undefined,
+  riskClass: undefined,
+  knownQuarantineRisk: undefined,
+});
+
+/** TypeScript types derived from Zod schemas */
+export type SeedLotBase = z.infer<typeof SeedLotBaseSchema>;
+export type SeedLotReference = z.infer<typeof SeedLotReferenceSchema>;
+export type SeedLotCreate = z.infer<typeof SeedLotCreateSchema>;
+export type SeedLotUpdate = z.infer<typeof SeedLotUpdateSchema>;
+export type SeedLotDetailed = z.infer<typeof SeedLotDetailedSchema>;

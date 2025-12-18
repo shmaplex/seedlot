@@ -3,6 +3,7 @@
 import type { User } from "@supabase/supabase-js";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import { z } from "zod";
 import {
   getProfile,
   updatePassword,
@@ -18,37 +19,40 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { UserProfile } from "@/schemas/profile.schema";
+import type { ProfileBase, ProfileUpdate } from "@/schemas/profile.schema";
 import Avatar from "./avatar";
 
-export default function AccountForm({
-  user,
-  profile,
-}: {
+type AccountFormProps = {
   user: User | null;
-  profile: UserProfile | null;
-}) {
+  profile: ProfileBase | null;
+};
+
+export default function AccountForm({ user, profile }: AccountFormProps) {
   const t = useTranslations("account");
 
   const [loading, setLoading] = useState(false);
-  const [fullName, setFullName] = useState<string | null>(
-    profile?.fullName ?? null,
-  );
-  const [username, setUsername] = useState<string | null>(
-    profile?.username ?? null,
-  );
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(
-    profile?.avatarUrl ?? null,
-  );
+  const [formData, setFormData] = useState<ProfileUpdate>({
+    fullName: profile?.fullName ?? null,
+    username: profile?.username ?? null,
+    avatarUrl: profile?.avatarUrl ?? null,
+    preferredLang: profile?.preferredLang ?? null,
+    timezone: profile?.timezone ?? null,
+    settings: profile?.settings ?? null,
+  });
   const [newPassword, setNewPassword] = useState("");
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;
     const data = await getProfile(user.id);
     if (data) {
-      setFullName(data.fullName);
-      setUsername(data.username);
-      setAvatarUrl(data.avatarUrl);
+      setFormData({
+        fullName: data.fullName,
+        username: data.username,
+        avatarUrl: data.avatarUrl,
+        preferredLang: data.preferredLang,
+        timezone: data.timezone,
+        settings: data.settings,
+      });
     }
   }, [user]);
 
@@ -56,37 +60,58 @@ export default function AccountForm({
     if (!profile) refreshProfile();
   }, [profile, refreshProfile]);
 
-  async function handleUpdateProfile() {
+  const handleUpdateProfile = async () => {
     if (!user) return;
     setLoading(true);
-    const result = await updateProfileAction({
-      id: user.id,
-      fullName,
-      username,
-      avatarUrl,
-    });
-    setLoading(false);
 
-    if (!result) {
+    try {
+      // Validate using Zod before sending
+      const parsedData = z
+        .object({
+          fullName: z.string().nullable().optional(),
+          username: z.string().nullable().optional(),
+          avatarUrl: z.string().url().nullable().optional(),
+          preferredLang: z.string().nullable().optional(),
+          timezone: z.string().nullable().optional(),
+          settings: z.record(z.string(), z.unknown()).nullable().optional(),
+        })
+        .parse(formData);
+
+      const result = await updateProfileAction({
+        id: user.id,
+        ...parsedData,
+      });
+
+      if (!result) {
+        alert(t("updateError"));
+      } else {
+        alert(t("updateSuccess"));
+      }
+    } catch (err: any) {
+      console.error(err);
       alert(t("updateError"));
-    } else {
-      alert(t("updateSuccess"));
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  async function handleChangePassword() {
+  const handleChangePassword = async () => {
     if (!newPassword) return;
     setLoading(true);
-    const result = await updatePassword(newPassword);
-    setLoading(false);
 
-    if (result.success) {
-      alert(t("passwordUpdateSuccess"));
-      setNewPassword("");
-    } else {
-      alert(`${t("passwordUpdateError")}: ${result.error}`);
+    try {
+      const result = await updatePassword(newPassword);
+
+      if (result.success) {
+        alert(t("passwordUpdateSuccess"));
+        setNewPassword("");
+      } else {
+        alert(`${t("passwordUpdateError")}: ${result.error}`);
+      }
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -105,10 +130,10 @@ export default function AccountForm({
           <div className="flex justify-center">
             <Avatar
               uid={user?.id ?? null}
-              url={avatarUrl}
+              url={formData.avatarUrl ?? null}
               size={150}
               onUpload={(url) => {
-                setAvatarUrl(url);
+                setFormData((prev) => ({ ...prev, avatarUrl: url }));
                 handleUpdateProfile();
               }}
             />
@@ -129,8 +154,10 @@ export default function AccountForm({
             </Label>
             <Input
               id="fullName"
-              value={fullName ?? ""}
-              onChange={(e) => setFullName(e.target.value)}
+              value={formData.fullName ?? ""}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, fullName: e.target.value }))
+              }
               className="bg-input border border-border text-foreground"
             />
           </div>
@@ -141,8 +168,10 @@ export default function AccountForm({
             </Label>
             <Input
               id="username"
-              value={username ?? ""}
-              onChange={(e) => setUsername(e.target.value)}
+              value={formData.username ?? ""}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, username: e.target.value }))
+              }
               className="bg-input border border-border text-foreground"
             />
           </div>
@@ -151,11 +180,6 @@ export default function AccountForm({
             <Button onClick={handleUpdateProfile} disabled={loading}>
               {loading ? t("saving") : t("update")}
             </Button>
-            {/* <form action="/auth/signout" method="post">
-              <Button variant="destructive" type="submit">
-                {t("signOut")}
-              </Button>
-            </form> */}
           </div>
         </CardContent>
       </Card>

@@ -1,4 +1,3 @@
-// schemas/profile.schema.ts
 import { z } from "zod";
 
 /**
@@ -15,37 +14,61 @@ export const UserRoleSchema = z.enum([
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
 /**
- * Full Profile row as stored in DB
+ * Base schema — core profile fields
  */
-export const ProfileSchema = z.object({
+export const ProfileBaseSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
-
   fullName: z.string().nullable(),
   username: z.string().nullable(),
   avatarUrl: z.string().url().nullable(),
-
   role: UserRoleSchema,
-
   permissions: z.record(z.string(), z.unknown()).nullable(),
-
   preferredLang: z.string().nullable(),
   timezone: z.string().nullable(),
   settings: z.record(z.string(), z.unknown()).nullable(),
-
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
 
-export type UserProfile = z.infer<typeof ProfileSchema>;
+/**
+ * Reference schema — minimal info for embedding elsewhere
+ */
+export const ProfileReferenceSchema = ProfileBaseSchema.pick({
+  id: true,
+  fullName: true,
+  username: true,
+  role: true,
+  avatarUrl: true,
+});
 
-export const ProfileUpdateSchema = z.object({
+/**
+ * Create schema — for new profile creation
+ */
+export const ProfileCreateSchema = z.object({
+  email: z.string().email(),
   fullName: z.string().nullable().optional(),
   username: z.string().nullable().optional(),
   avatarUrl: z.string().url().nullable().optional(),
-  preferredLang: z.string().optional(),
+  role: UserRoleSchema,
+  preferredLang: z.string().nullable().optional(),
   timezone: z.string().nullable().optional(),
   settings: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
-export type ProfileUpdateInput = z.infer<typeof ProfileUpdateSchema>;
+/**
+ * Update schema — partial updates allowed
+ */
+export const ProfileUpdateSchema = ProfileCreateSchema.partial();
+
+/**
+ * Detailed schema — internal/admin view with all fields
+ */
+export const ProfileDetailedSchema = ProfileBaseSchema.extend({});
+
+/** TypeScript types derived from Zod schemas */
+export type ProfileBase = z.infer<typeof ProfileBaseSchema>;
+export type ProfileReference = z.infer<typeof ProfileReferenceSchema>;
+export type ProfileCreate = z.infer<typeof ProfileCreateSchema>;
+export type ProfileUpdate = z.infer<typeof ProfileUpdateSchema>;
+export type ProfileDetailed = z.infer<typeof ProfileDetailedSchema>;
