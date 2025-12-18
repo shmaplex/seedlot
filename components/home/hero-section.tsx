@@ -27,10 +27,12 @@ export default function HeroSection({
           {dict.description}
         </p>
 
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:gap-6">
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:gap-2">
+          {/* Waitlist button instead of login */}
           <Button asChild size="lg" className="rounded-full">
-            <Link href={`/${lang}/login`}>{dict.actions.login}</Link>
+            <Link href={`/${lang}/waitlist`}>{dict.actions.waitlist}</Link>
           </Button>
+
           <Button asChild size="lg" variant="outline" className="rounded-full">
             <Link href={`/${lang}/docs`}>{dict.actions.docs}</Link>
           </Button>

@@ -43,7 +43,7 @@ export default function DocumentationPageClient({
       </p>
 
       {/* CTA buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-2 justify-center">
         <Button
           asChild
           size="lg"
@@ -56,9 +56,9 @@ export default function DocumentationPageClient({
           asChild
           size="lg"
           variant="outline"
-          className="rounded-full font-semibold hover:bg-primary-foreground hover:border-transparent hover:text-primary shadow-md hover:shadow-lg transition-all duration-200"
+          className="rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-200"
         >
-          <Link href={`/${lang}/signup`}>{dict.getStarted}</Link>
+          <Link href={`/${lang}/waitlist`}>{dict.getStarted}</Link>
         </Button>
       </div>
 

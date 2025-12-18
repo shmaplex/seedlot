@@ -39,6 +39,7 @@
   ],
   "actions": {
     "login": "로그인",
+    "waitlist": "웨이트리스트 참여",
     "docs": "문서",
     "signup": "회원가입",
     "cta": "지금 시작하기",

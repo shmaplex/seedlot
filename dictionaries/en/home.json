@@ -39,6 +39,7 @@
   ],
   "actions": {
     "login": "Sign in",
+    "waitlist": "Join Waitlist",
     "docs": "Documentation",
     "signup": "Sign up",
     "cta": "Get Started Today",
