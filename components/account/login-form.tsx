@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { login } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,19 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ lang, loginDict }: LoginFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await login(data, lang);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -29,7 +43,11 @@ export function LoginForm({ lang, loginDict }: LoginFormProps) {
 
       <CardContent className="space-y-4">
         <form
-          action={(data: FormData) => login(data, lang)}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            await handleSubmit(formData);
+          }}
           className="space-y-4"
         >
           <FieldGroup>
@@ -41,6 +59,7 @@ export function LoginForm({ lang, loginDict }: LoginFormProps) {
                 type="email"
                 placeholder={loginDict.email.placeholder}
                 required
+                disabled={isSubmitting}
               />
             </Field>
 
@@ -54,6 +73,7 @@ export function LoginForm({ lang, loginDict }: LoginFormProps) {
                 type="password"
                 placeholder={loginDict.password.placeholder}
                 required
+                disabled={isSubmitting}
               />
               <div className="text-right mt-1">
                 <Link
@@ -67,8 +87,10 @@ export function LoginForm({ lang, loginDict }: LoginFormProps) {
             </Field>
 
             <Field>
-              <Button type="submit" className="w-full">
-                {loginDict.submit}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting
+                  ? loginDict.signingIn || "Signing in..."
+                  : loginDict.submit}
               </Button>
             </Field>
           </FieldGroup>

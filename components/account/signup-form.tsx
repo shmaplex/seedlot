@@ -37,16 +37,18 @@ type SignupState = {
 
 function SubmitButton({
   label,
+  signingUp,
   disabled,
 }: {
   label: string;
+  signingUp: boolean;
   disabled: boolean;
 }) {
   const { pending } = useFormStatus();
 
   return (
     <Button type="submit" disabled={disabled || pending} className="w-full">
-      {pending ? "…" : label}
+      {pending || signingUp ? `${label}…` : label}
     </Button>
   );
 }
@@ -70,6 +72,8 @@ export function SignupForm({
     role: "",
   });
 
+  const [signingUp, setSigningUp] = React.useState(false);
+
   const passwordsMismatch =
     form.confirmPassword.length > 0 && form.password !== form.confirmPassword;
 
@@ -81,7 +85,14 @@ export function SignupForm({
   }
 
   const [state, formAction] = React.useActionState<SignupState, FormData>(
-    (_, data) => signup(data, lang),
+    async (_, data) => {
+      setSigningUp(true);
+      try {
+        return await signup(data, lang);
+      } finally {
+        setSigningUp(false);
+      }
+    },
     {},
   );
 
@@ -183,7 +194,6 @@ export function SignupForm({
             {/* Role */}
             <Field>
               <FieldLabel>{signupDict.role.label}</FieldLabel>
-
               <Select
                 value={form.role}
                 onValueChange={(value) => update("role", value)}
@@ -191,7 +201,6 @@ export function SignupForm({
                 <SelectTrigger>
                   <SelectValue placeholder={signupDict.role.placeholder} />
                 </SelectTrigger>
-
                 <SelectContent>
                   {PUBLIC_SIGNUP_ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
@@ -200,9 +209,7 @@ export function SignupForm({
                   ))}
                 </SelectContent>
               </Select>
-
               <input type="hidden" name="role" value={form.role} />
-
               {signupDict.role.description && (
                 <FieldDescription>
                   {signupDict.role.description}
@@ -211,7 +218,11 @@ export function SignupForm({
             </Field>
 
             {/* Submit */}
-            <SubmitButton label={signupDict.submit} disabled={!isValid} />
+            <SubmitButton
+              label={signupDict.submit}
+              disabled={!isValid}
+              signingUp={signingUp}
+            />
 
             {/* Social login */}
             {!disableSocialLogin && (
